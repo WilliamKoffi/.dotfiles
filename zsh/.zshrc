@@ -112,6 +112,10 @@ zshaddhistory() {
 
 source $ZSH/oh-my-zsh.sh
 
+# zsh-autosuggestions: remove end-of-line from full-accept so Ctrl+E can do partial accept
+ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=(forward-char vi-forward-char vi-end-of-line)
+bindkey '^E' forward-word
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -142,8 +146,3 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 source "$HOME/.dotfiles/bash/.config/bash/main.sh"
-
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-eval "$(uv generate-shell-completion zsh)"
-eval "$(uvx --generate-shell-completion zsh)"

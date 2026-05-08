@@ -38,5 +38,12 @@
     "codebaseInvestigatorSettings": {
       "enabled": true
     }
+  },
+  "agents": {
+    "overrides": {
+      "codebase_investigator": {
+        "enabled": true
+      }
+    }
   }
 }

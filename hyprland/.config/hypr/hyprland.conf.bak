@@ -190,12 +190,8 @@ input {
 
     touchpad {
         natural_scroll = false
+        workspace_swipe = true
     }
-}
-
-gestures {
-    # Active le balayage à 3 doigts horizontal pour changer de bureau
-    gesture = 3, horizontal, workspace
 }
 
 # Example per-device config
@@ -307,75 +303,36 @@ bindl = , XF86AudioPrev, exec, playerctl previous
 # windowrule = size 1000 800,floating:1
 
 # Open editors on workspace 2
-windowrule {
-    name = editors-workspace
-    match:class = ^(Code|Windsurf|dev\.zed\.Zed|cursor)$
-    workspace = 2 silent
-}
+windowrule = workspace 2 silent,class:^(Code)$
+windowrule = workspace 2 silent,class:^(Windsurf)$
+windowrule = workspace 2 silent,class:^(dev.zed.Zed)$
+windowrule = workspace 2 silent,class:^(cursor)$
 
 # Make file manager always float, center and resize
-windowrule {
-    name = filemanager-float
-    match:class = ^($fileManager)$
-    float = yes
-    center = yes
-    size = 800 600
-}
+windowrule = float,center,size 800 600,class:^($fileManager)$
 
 # Make terminal always float, center and resize
-windowrule {
-    name = terminal-float
-    match:class = ^($terminal)$
-    float = yes
-    center = yes
-    size = 1000 800
-}
+windowrule = float,center,class:^($terminal)$
+windowrule = size 1000 800,class:^($terminal)$
 
 # Make localsend_app always float, center and resize
-windowrule {
-    name = localsend-float
-    match:class = ^(localsend_app)$
-    float = yes
-    center = yes
-    size = 800 600
-}
+windowrule = float, class:^(localsend_app)$
+windowrule = center, class:^(localsend_app)$
+windowrule = size 800 600, class:^(localsend_app)$
 
 # Make blueman-manager always float, center and resize
-windowrule {
-    name = blueman-float
-    match:class = ^(blueman-manager)$
-    float = yes
-    center = yes
-    size = 1000 800
-}
+windowrule = float,center,class:^(blueman-manager)$
+windowrule = size 1000 800,class:^(blueman-manager)$
 
-# Make Telegram always float, center and resize
-windowrule {
-    name = telegram-float
-    match:class = ^(org.telegram.desktop)$
-    float = yes
-    center = yes
-    size = 1000 800
-}
+# Make Telegram always float, center and resize to the same size as the terminal
+windowrule = float,center,class:^(org.telegram.desktop)$
+windowrule = size 1000 800,class:^(org.telegram.desktop)$
 
 # Ignore maximize requests from apps. You'll probably like this.
-windowrule {
-    name = suppress-maximize-events
-    match:class = .*
-    suppress_event = maximize
-}
+windowrule = suppressevent maximize, class:.*
 
 # Fix some dragging issues with XWayland
-windowrule {
-    name = fix-xwayland-drags
-    match:class = ^$
-    match:title = ^$
-    match:xwayland = true
-    match:float = true
-    match:fullscreen = false
-    match:pin = false
-    no_focus = true
-}
+windowrule = nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0
 
 # Lancer swayidle au démarrage d'Hyprland
 exec-once = swayidle -w timeout 300 'swaylock-effects -f -c 000000' timeout 600 'hyprctl dispatch dpms off' resume 'hyprctl dispatch dpms on' before-sleep 'swaylock-effects -f -c 000000'
