@@ -1,7 +1,7 @@
 * {
     border: none;
     border-radius: 0px;
-    font-family: Roboto Mono SemiBold, Iosevka Nerd Font;
+    font-family: "FiraCode Nerd Font", Roboto Mono, monospace;
     font-size: 18px;
     font-style: normal;
     min-height: 0;
@@ -219,3 +219,12 @@ window#waybar {
     font-weight: bold;
 }
 
+#battery,
+#custom-power {
+    background-color: #2e3440;
+    color: #a3be8c;
+    border-radius: 16px;
+    margin: 5px;
+    padding: 0px 10px;
+    font-weight: bold;
+}

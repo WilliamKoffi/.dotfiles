@@ -8,6 +8,8 @@ case $- in
       *) return;;
 esac
 
+# ─── History ──────────────────────────────────────────────────────────────────
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -19,6 +21,8 @@ shopt -s histappend
 HISTSIZE=1000
 HISTFILESIZE=2000
 
+# ─── Shell Options ────────────────────────────────────────────────────────────
+
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
@@ -29,6 +33,8 @@ shopt -s checkwinsize
 
 # make less more friendly for non-text input files, see lesspipe(1)
 #[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# ─── Prompt ───────────────────────────────────────────────────────────────────
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
@@ -72,6 +78,8 @@ xterm*|rxvt*)
     ;;
 esac
 
+# ─── Color Support ────────────────────────────────────────────────────────────
+
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -87,10 +95,14 @@ fi
 # colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
+# ─── Aliases ─────────────────────────────────────────────────────────────────
+
 # some more ls aliases
 #alias ll='ls -l'
 #alias la='ls -A'
 #alias l='ls -CF'
+
+alias l="ls -lah"
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -100,6 +112,8 @@ fi
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
+
+# ─── Completions ─────────────────────────────────────────────────────────────
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -112,7 +126,10 @@ if ! shopt -oq posix; then
   fi
 fi
 
-alias l="ls -lah"
+# ─── Sources & PATH ──────────────────────────────────────────────────────────
 
 . "$HOME/.cargo/env"
 . "$HOME/.deno/env"
+
+# Added by Antigravity CLI installer
+export PATH="/home/llyam/.local/bin:$PATH"

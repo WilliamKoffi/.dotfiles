@@ -34,11 +34,7 @@
   "ide": {
     "enabled": true
   },
-  "experimental": {
-    "codebaseInvestigatorSettings": {
-      "enabled": true
-    }
-  },
+  "experimental": {},
   "agents": {
     "overrides": {
       "codebase_investigator": {

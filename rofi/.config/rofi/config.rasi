@@ -1,0 +1,20 @@
+configuration {
+    modes:             "drun";
+    font:              "JetBrainsMono Nerd Font 13";
+    show-icons:        true;
+    icon-theme:        "Papirus-Dark";
+    drun-display-format: "{name}";
+    location:          1;        /* top-center */
+    fixed-num-lines:   true;
+    lines:             8;
+    columns:           1;
+    hide-scrollbar:    true;
+    sidebar-mode:      false;
+
+    /* drun settings */
+    drun {
+        display-name: "";
+    }
+}
+
+@theme "~/.config/rofi/tokyo-night-top-bar.rasi"

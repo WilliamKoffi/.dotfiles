@@ -1,10 +1,15 @@
-# Add deno completions to search path
-if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then export FPATH="$HOME/.zsh/completions:$FPATH"; fi
+# ─── PATH & Environment ───────────────────────────────────────────────────────
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
-# Path to your Oh My Zsh installation.
+# Add deno completions to search path
+if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then export FPATH="$HOME/.zsh/completions:$FPATH"; fi
+
+export PATH="/home/llyam/.local/bin:$PATH"
+export SUDO_EDITOR=vim
 export ZSH="$HOME/.oh-my-zsh"
+
+# ─── Oh My Zsh Configuration ─────────────────────────────────────────────────
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
@@ -67,20 +72,21 @@ ZSH_THEME="random" # set by `omz`
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-# Which plugins would you like to load?
+# ─── Plugins ─────────────────────────────────────────────────────────────────
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-	git 
-	zsh-autosuggestions 
-	zsh-syntax-highlighting
-	laravel
 	asdf
-	deno
 	bun
+	deno
+	fzf
+	git
 	history
+	laravel
+	laravel-sail
+	mailpit
 	man
 	nmap
 	node
@@ -95,12 +101,12 @@ plugins=(
 	systemd
 	vscode
 	xclip
-	mailpit
-	laravel-sail
 	zoxide
-	fzf
+	zsh-autosuggestions
+	zsh-syntax-highlighting
 )
 
+# ─── History Hook ─────────────────────────────────────────────────────────────
 zshaddhistory() {
   # Check if the last command failed with "command not found"
   if [[ $? -eq 127 ]]; then
@@ -110,7 +116,10 @@ zshaddhistory() {
   fi
 }
 
+# ─── Oh My Zsh Source ────────────────────────────────────────────────────────
 source $ZSH/oh-my-zsh.sh
+
+# ─── Post-Source Configuration ───────────────────────────────────────────────
 
 # zsh-autosuggestions: remove end-of-line from full-accept so Ctrl+E can do partial accept
 ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=(forward-char vi-forward-char vi-end-of-line)
@@ -145,4 +154,8 @@ bindkey '^E' forward-word
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# ─── Additional Sources ───────────────────────────────────────────────────────
 source "$HOME/.dotfiles/bash/.config/bash/main.sh"
+
+# Added by Antigravity CLI installer
+eval "$(undo init zsh)"

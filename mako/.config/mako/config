@@ -1,0 +1,38 @@
+# ─── Mako Notification Configuration ─────────────────────────────────────────
+
+# Position & size
+anchor=top-right
+margin=10
+width=320
+height=110
+padding=12
+
+# Max visible notifications at once
+max-visible=5
+sort=-time
+
+# ─── Appearance ───────────────────────────────────────────────────────────────
+font=monospace 11
+background-color=#1e1e2eee
+text-color=#cdd6f4
+border-color=#89b4faee
+border-radius=8
+border-size=1
+icons=1
+icon-location=left
+icon-path=/usr/share/icons/hicolor
+
+# ─── Timing ───────────────────────────────────────────────────────────────────
+default-timeout=5000
+ignore-timeout=0
+
+# ─── Urgency Overrides ────────────────────────────────────────────────────────
+
+[urgency=low]
+border-color=#6c7086aa
+default-timeout=3000
+
+[urgency=high]
+border-color=#f38ba8ee
+background-color=#1e1e2eee
+default-timeout=0
