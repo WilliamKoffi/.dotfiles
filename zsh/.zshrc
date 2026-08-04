@@ -78,7 +78,6 @@ ZSH_THEME="random" # set by `omz`
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-	asdf
 	bun
 	deno
 	fzf
@@ -159,3 +158,4 @@ source "$HOME/.dotfiles/bash/.config/bash/main.sh"
 
 # Added by Antigravity CLI installer
 eval "$(undo init zsh)"
+eval "$(atuin init zsh)"
