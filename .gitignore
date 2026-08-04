@@ -1,3 +1,6 @@
 .nvim/
 trash/
 .claude/
+
+# Browser tab-group state export (personal browsing metadata)
+brave-tabs.json

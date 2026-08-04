@@ -46,10 +46,10 @@ main() {
 # Get valid user
 USERNAME=$(get_user) || exit 1
 
-# Run main as that user
-sudo -u "$USERNAME" bash -c "LOG_FILE=\"$LOG_FILE\"; export XDG_RUNTIME_DIR=/run/user/$(id -u $USERNAME); $(typeset -f main wait_for_sink log); main"
-ERNAME); $(typeset -f main wait_for_sink log); main"
+# If running as root, re-run main as the logged-in user (so PulseAudio/PipeWire
+# talks to that user's session bus). Otherwise just run main directly.
+if [ "$(id -u)" -eq 0 ]; then
+    sudo -u "$USERNAME" bash -c "LOG_FILE=\"$LOG_FILE\"; export XDG_RUNTIME_DIR=/run/user/$(id -u "$USERNAME"); $(typeset -f main wait_for_sink log); main"
 else
-    # Script is running as a normal user, just run main
     main
 fi

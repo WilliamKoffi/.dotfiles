@@ -3,3 +3,5 @@ trash/
 **/trash/
 .helix/
 debug/
+
+**/.claude/settings.local.json

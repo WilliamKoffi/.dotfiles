@@ -73,7 +73,7 @@ kebab_case() {
 nvim() {
 	folder=$(basename "$PWD")
 	echo -ne "\033]0;nvim/$folder\007"
-	/usr/bin/nvim
+	/usr/bin/nvim "$@"
 }
 
 function boltdiy_dev() {
