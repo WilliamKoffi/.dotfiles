@@ -2,6 +2,7 @@
 
 todo() {
 	local todo_dir=~/lab/tmp/todos/
+	mkdir -p "$todo_dir"
 	cd "$todo_dir" 2>/dev/null || {
 		print_message error "Failed to change directory to $todo_dir"
 		return 1
@@ -63,6 +64,25 @@ todo() {
 	fi
 
 	nvim "$today_file"
+}
+
+unalias ll 2>/dev/null
+ll() {
+	if [ "$#" -eq 0 ]; then
+		eza -lah
+		return
+	fi
+
+	if [ -e "$1" ] && [ "$#" -eq 1 ]; then
+		eza -lah -- "$1"
+		return
+	fi
+
+	local resolved
+	resolved="$(zoxide query "$@" 2>/dev/null)" || resolved="$*"
+
+	echo "$resolved"
+	eza -lah -- "$resolved"
 }
 
 kebab_case() {
