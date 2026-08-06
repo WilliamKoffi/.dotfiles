@@ -52,12 +52,12 @@ return function(display, path)
     display.bind(modifier .. " + mouse:273", display.dsp.window.resize(), { mouse = true })
 
     -- Hardware Controls
-    display.bind(modifier .. " + XF86AudioRaiseVolume", display.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"), { ["repeat"] = true, locked = true })
-    display.bind(modifier .. " + XF86AudioLowerVolume", display.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { ["repeat"] = true, locked = true })
-    display.bind(modifier .. " + XF86AudioMute", display.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { ["repeat"] = true, locked = true })
-    display.bind(modifier .. " + XF86AudioMicMute", display.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { ["repeat"] = true, locked = true })
-    display.bind(modifier .. " + XF86MonBrightnessUp", display.dsp.exec_cmd("brightnessctl s 10%+"), { ["repeat"] = true, locked = true })
-    display.bind(modifier .. " + XF86MonBrightnessDown", display.dsp.exec_cmd("brightnessctl s 10%-"), { ["repeat"] = true, locked = true })
+    display.bind("XF86AudioRaiseVolume", display.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"), { ["repeat"] = true, locked = true })
+    display.bind("XF86AudioLowerVolume", display.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { ["repeat"] = true, locked = true })
+    display.bind("XF86AudioMute", display.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { ["repeat"] = true, locked = true })
+    display.bind("XF86AudioMicMute", display.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { ["repeat"] = true, locked = true })
+    display.bind("XF86MonBrightnessUp", display.dsp.exec_cmd("brightnessctl s 10%+"), { ["repeat"] = true, locked = true })
+    display.bind("XF86MonBrightnessDown", display.dsp.exec_cmd("brightnessctl s 10%-"), { ["repeat"] = true, locked = true })
 
     -- Media Player Actions
     display.bind("XF86AudioNext", display.dsp.exec_cmd("playerctl next"), { locked = true })

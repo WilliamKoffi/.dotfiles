@@ -1,6 +1,6 @@
 -- The Composer: Coordinates the domains without harboring business logic.
 
-local display = require("hl")
+local display = hl
 local path = os.getenv("HOME")
 local Browser = require("hyprland.browser")
 local listen = require("hyprland.listen")
