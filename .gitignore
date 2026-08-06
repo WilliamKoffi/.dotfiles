@@ -1,9 +1,32 @@
 .nvim/
 trash/
-.claude/
+# Never — secrets
+.credentials.json
+*.pem
+*.key
+
+# Never — machine state Claude regenerates
+claude/.claude/plugins/
+claude/.claude/projects/
+claude/.claude/file-history/
+claude/.claude/shell-snapshots/
+claude/.claude/session-env/
+claude/.claude/sessions/
+claude/.claude/paste-cache/
+claude/.claude/downloads/
+claude/.claude/backups/
+claude/.claude/cache/
+claude/.claude/chrome/
+claude/.claude/tasks/
+claude/.claude/plans/
+claude/.claude/history.jsonl
+claude/.claude/.last-*
+claude/.claude/mcp-needs-auth-cache.json
+
+# Never — project-local settings, not portable
+claude/.claude/.claude/
+settings.local.json
 
 # Browser tab-group state export (personal browsing metadata)
 brave-tabs.json
 
-# graft's local graph cache — regenerable, not committed (run `graft build`).
-graft/
