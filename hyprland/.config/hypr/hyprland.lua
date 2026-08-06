@@ -2,6 +2,8 @@
 -- HYPRLAND LUA CONFIGURATION
 -- #######################################################################################
 
+local home = os.getenv("HOME")
+
 -- Monitors configuration
 hl.monitor({
     output = "eDP-1",
@@ -122,13 +124,60 @@ local menu = "rofi -show drun"
 
 -- Autostart processes
 hl.on("hyprland.start", function ()
-    hl.exec_cmd("waybar -c ~/.config/waybar/config.ini -s ~/.config/waybar/style.css")
+    hl.exec_cmd("waybar -c " .. home .. "/.config/waybar/config.ini -s " .. home .. "/.config/waybar/style.css")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("mako")
     hl.exec_cmd("wl-paste --watch cliphist store")
     hl.exec_cmd("wl-clipboard")
-    hl.exec_cmd("~/.local/bin/browser-workspace-daemon.sh")
     hl.exec_cmd("hypridle")
+end)
+
+-- Automatically group each new browser window onto its own workspace (starting at 3)
+local browser_classes = {
+    ["brave-browser"] = true,
+    ["google-chrome"] = true,
+    ["google-chrome-stable"] = true,
+    ["chromium"] = true,
+    ["chromium-browser"] = true,
+    ["firefox"] = true,
+    ["firefoxdeveloperedition"] = true,
+    ["org.mozilla.firefox"] = true,
+    ["zen"] = true,
+    ["zen-browser"] = true,
+    ["vivaldi-stable"] = true,
+    ["microsoft-edge"] = true,
+    ["microsoft-edge-stable"] = true,
+}
+
+hl.on("window.open", function (w)
+    if not w or not browser_classes[w.class] then
+        return
+    end
+
+    local start_ws = 3
+    local max_ws = 20
+    local windows = hl.get_windows()
+
+    local used_workspaces = {}
+    for _, win in ipairs(windows) do
+        if win.address ~= w.address and browser_classes[win.class] then
+            if win.workspace then
+                used_workspaces[win.workspace.id] = true
+            end
+        end
+    end
+
+    local target_ws = start_ws
+    for ws = start_ws, max_ws do
+        if not used_workspaces[ws] then
+            target_ws = ws
+            break
+        end
+    end
+
+    if not w.workspace or w.workspace.id ~= target_ws then
+        hl.dispatch(hl.dsp.window.move({ workspace = target_ws, window = "address:" .. w.address }))
+    end
 end)
 
 -- Keybindings
@@ -137,7 +186,7 @@ local mainMod = "SUPER"
 -- Example binds using correct hl.dsp dispatchers and modifier + key syntax
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd("warp-terminal"))
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("~/.nix-profile/bin/nixGL ~/.nix-profile/bin/rio > /tmp/rio_error.log 2>&1"))
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(home .. "/.nix-profile/bin/nixGL " .. home .. "/.nix-profile/bin/rio > /tmp/rio_error.log 2>&1"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("brave-browser --new-window"))
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("brave-browser --new-window --incognito"))
@@ -148,7 +197,7 @@ hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("rotatesplit"))
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("~/.local/bin/cliphist-paste.sh"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(home .. "/.local/bin/cliphist-paste.sh"))
 
 -- Lock screen
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
