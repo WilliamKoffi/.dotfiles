@@ -1,54 +1,54 @@
 ---
 name: slice
-description: Vague 1 du pipeline refactor. Place chaque fichier dans sa slice et applique la convention de nom de sa famille. Ne touche a aucune logique.
-argument-hint: [chemin]
+description: Wave 1 of the refactor pipeline. Places every file in its slice and applies its family's naming convention. Touches no logic.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash(git mv *), Bash(git status *)
 ---
 
-# Vague 1 — slice
+# Wave 1 — slice
 
-Mission : **chaque fichier a la bonne place, sous le bon nom.**
+Mission: **every file in the right place, under the right name.**
 
-## Perimetre autorise
+## Allowed perimeter
 
-- chemins et noms de fichiers
-- creation de repertoires
-- lignes d'import et d'export impactees par un deplacement
-- mapping PSR-4, fichier .nimble, declarations de modules
+- file paths and names
+- directory creation
+- import and export lines affected by a move
+- PSR-4 mapping, `.nimble` file, module declarations
 
-## Gele
+## Frozen
 
-- toute logique, toute signature, tout identifiant de symbole
-- tout fichier hors de `$scope`
+- all logic, all signatures, all symbol identifiers
+- every file outside `$scope`
 - `src/legacy/`
 
-## Regles
+## Rules
 
-La convention depend de la famille. Lis la section `## slice` du rulebook
-correspondant a l'extension de chaque fichier, dans
+The convention depends on the family. Read the `## slice` section of the
+rulebook matching each file's extension, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-**Ne generalise jamais la convention d'une famille a une autre.** Le point
-separateur est une regle ecmascript ; il casse Blade, Rust et Nim.
+**Never generalize one family's convention to another.** The dot separator is an
+ecmascript rule; it breaks Blade, Rust and Nim.
 
-Si un fichier a une extension sans rulebook : ne le touche pas.
+If a file has an extension with no rulebook: do not touch it.
 
-## Methode
+## Method
 
-1. Une famille a la fois, un commit par famille.
-2. Deplacement par `git mv` systematiquement, pour preserver l'historique.
-3. Apres chaque lot, mettre a jour les references — y compris celles par
-   chaine, que le compilateur ne verra pas : appels de vue, conteneur de
-   services, configuration, references de classe par nom.
-4. Build apres chaque lot, pas seulement a la fin.
+1. One family at a time, one commit per family.
+2. Always move with `git mv`, to preserve history.
+3. After each batch, update the references — including the string ones the
+   compiler will not see: view calls, service container, configuration, class
+   references by name.
+4. Build after each batch, not only at the end.
 
-## Gate de sortie
+## Exit gate
 
-- Build vert, typecheck vert
-- Aucune reference cassee, y compris les references par chaine
-- Aucun fichier de reexport pur restant
-- Zero import mort
-- Findings `slice` du ledger fermes ou justifies
+- Build green, typecheck green
+- No broken reference, including string references
+- No pure re-export file left
+- Zero dead imports
+- `slice` findings in the ledger closed or justified

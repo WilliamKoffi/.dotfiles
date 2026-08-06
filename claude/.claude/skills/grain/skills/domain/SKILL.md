@@ -1,56 +1,59 @@
 ---
 name: domain
-description: Vague 2 du pipeline refactor. Cree les noms de domaine manquants et rend toutes les formes explicites. Ne deplace ni ne renomme aucun fichier.
-argument-hint: [chemin]
+description: Wave 2 of the refactor pipeline. Creates the missing domain names and makes every shape explicit. Moves and renames no file.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write
 ---
 
-# Vague 2 — domain
+# Wave 2 — domain
 
-Mission : **les concepts que le code manipule sans les nommer recoivent un nom.**
+Mission: **the concepts the code manipulates without naming them get a name.**
 
-## Perimetre autorise
+## Allowed perimeter
 
-- nouveaux fichiers de types, interfaces, structs, enums, value objects
-- annotations de type sur signatures existantes
-- hierarchies de DTO
-- remplacement de primitives correlees par le nom extrait, aux sites d'appel
+- new files for types, interfaces, structs, enums, value objects
+- type annotations on existing signatures
+- DTO hierarchies
+- replacing correlated primitives with the extracted name, at the call sites
 
-## Gele
+## Frozen
 
-- chemins et noms de fichiers (la vague 1 les a fixes)
-- emplacement des methodes (vague 4)
-- noms d'identifiants existants (vague 7)
-- comportement a l'execution
+- file paths and names (wave 1 settled them)
+- method placement (wave 4)
+- existing identifier names (wave 7)
+- runtime behavior
+- repositories, DAOs, query objects: do not create any. When the extraction
+  surfaces query logic that belongs behind a shelf, open a finding with
+  `kind: "repository"`, list the call sites, and leave it `open`. `shelved`
+  closes it.
 
-## Regles
+## Rules
 
-Section `## domain` du rulebook de chaque famille, dans
+The `## domain` section of each family's rulebook, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-Tout fichier cree ici respecte la convention de nom etablie en vague 1 pour sa
-famille. Tu ne redecides pas la convention, tu la consultes.
+Every file created here follows the naming convention established in wave 1 for
+its family. You do not re-decide the convention, you consult it.
 
-## Signaux
+## Signals
 
-- trois primitives correlees ou plus dans une signature
-- forme de retour anonyme
-- ensemble ferme de valeurs modelise en booleens multiples ou en chaines
-- typage evasif
+- three or more correlated primitives in a signature
+- anonymous return shape
+- closed set of values modeled as multiple booleans or as strings
+- evasive typing
 
-## Litteraux repetes : findings pour la vague 3
+## Repeated literals: findings for wave 3
 
-Certaines familles ferment elles-memes l'ensemble ferme de valeurs (`enum`
-PHP, `enum` Rust, `enum` Nim — voir la section `## domain` de leur rulebook).
-Pour ces familles, ne rien deleguer : tu extrais deja tout ici.
+Some families close the set of values themselves (PHP `enum`, Rust `enum`, Nim
+`enum` — see the `## domain` section of their rulebook). For those families,
+delegate nothing: you already extract everything here.
 
-Pour les familles dont le rulebook n'a pas de mecanisme d'enum natif consacre
-dans `## domain` (ecmascript aujourd'hui), un cluster de litteraux repetes
-n'est **pas** ta charge d'extraction — c'est un finding que tu ouvres pour la
-vague `literal` :
+For families whose rulebook has no dedicated native enum mechanism in
+`## domain` (ecmascript today), a cluster of repeated literals is **not** yours
+to extract — it is a finding you open for the `literal` wave:
 
     {
       "id": "F-014", "wave": "literal", "family": "ecmascript",
@@ -63,19 +66,19 @@ vague `literal` :
       ]
     }
 
-`home` doit etre un chemin qui existe deja ou qui est le nom de domaine que
-*toi* tu es en train de creer dans cette meme vague — jamais un chemin que
-`literal` devra inventer. `exhaustive: false` si le jeu de valeurs n'est pas
-prouvablement clos (ex : valeurs en provenance d'une API non typee). Toi seul
-decides si deux chaines identiques sont un seul concept ou deux coincidences
-— `literal` ne rouvre jamais ce jugement, il ne fait qu'extraire.
+`home` must be a path that already exists or that is the domain name *you* are
+creating in this very wave — never a path `literal` would have to invent.
+`exhaustive: false` if the value set is not provably closed (e.g. values coming
+from an untyped API). You alone decide whether two identical strings are one
+concept or two coincidences — `literal` never reopens that judgment, it only
+extracts.
 
-## Gate de sortie
+## Exit gate
 
-- Aucune forme de retour anonyme dans le scope
-- Aucun groupe de trois primitives correlees ou plus en signature
-- Typecheck vert
-- Suite de tests verte, sans aucune modification des tests
-- Findings `domain` fermes ou justifies
-- Tout cluster de litteraux repetes ecmascript a un finding `literal` ouvert
-  ou une derogation ecrite
+- No anonymous return shape in scope
+- No group of three or more correlated primitives in a signature
+- Typecheck green
+- Test suite green, with no test modified
+- `domain` findings closed or justified
+- Every ecmascript cluster of repeated literals has an open `literal` finding or
+  a written exemption

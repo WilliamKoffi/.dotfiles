@@ -1,15 +1,15 @@
-# Famille ecmascript
+# Family ecmascript
 
-Extensions : `.js`, `.jsx`, `.ts`, `.tsx`, `.vue`
+Extensions: `.js`, `.jsx`, `.ts`, `.tsx`, `.vue`
 
 ## slice
 
-### Convention de nom
+### Naming convention
 
     <entity>.<role>.<ext>
 
-Le role technique est separe de l'entite par un **point**, jamais par un tiret.
-L'entite est en kebab-case si elle compte plusieurs mots.
+The technical role is separated from the entity by a **dot**, never by a dash.
+The entity is kebab-case when it spans several words.
 
     hooks/user-hook.ts        ->  hooks/user.hook.ts
     services/payment-service.ts -> services/payment.service.ts
@@ -17,129 +17,128 @@ L'entite est en kebab-case si elle compte plusieurs mots.
     dialogs/login-dialog.vue  ->  dialogs/login.dialog.vue
     steps/building-choice.tsx ->  steps/building-choice.step.tsx
 
-Cette convention remplace la dualite Pattern A / Pattern B. Une seule regle
-pour les artefacts techniques et pour les composants UI.
+This convention replaces the Pattern A / Pattern B duality. One single rule for
+technical artifacts and for UI components alike.
 
-**Derogation assumee.** Le role apparait a la fois dans le dossier et dans le
-suffixe (`cards/user.card.tsx`). C'est voulu : le dossier sert la navigation
-dans l'arborescence, le suffixe sert l'onglet d'editeur, le fuzzy-find, la
-stack trace et le `git log`. Ne pas "corriger" cette redondance.
+**Deliberate redundancy.** The role appears both in the folder and in the
+suffix (`cards/user.card.tsx`). That is intended: the folder serves navigation
+through the tree, the suffix serves the editor tab, fuzzy-find, the stack trace
+and `git log`. Do not "fix" this redundancy.
 
-### Roles reconnus
+### Recognized roles
 
-Techniques :
+Technical:
 
     service hook schema type store validator constant query repository
     guard adapter mapper factory client config util
 
-UI :
+UI:
 
     card dialog drawer form input list menu modal popover select sheet
     sidebar step table tab timeline toolbar tooltip widget badge avatar
     button checkbox radio layout page view
 
-Un fichier dont le role n'est pas dans cette liste garde son nom nu
-(`user.ts`). Ne pas inventer de role.
+A file whose role is not in this list keeps its bare name (`user.ts`). Do not
+invent roles.
 
 ### Structure
 
-- Slice verticale : `features/<feature>/` possede tout ce dont elle a besoin.
-- `shared/` seulement a partir de **trois** consommateurs independants.
-- Le dossier de categorie est le pluriel du role : `cards/`, `hooks/`.
-- Les assets graphiques vont dans `assets/` (`choice/assets/papers.tsx`).
-- `index.tsx` qui rend du JSX = composeur, autorise.
-- `index.ts` qui ne fait que reexporter = barrel, interdit.
-- Alias de chemins preserves. Imports morts supprimes.
+- Vertical slice: `features/<feature>/` owns everything it needs.
+- `shared/` only from **three** independent consumers onward.
+- The category folder is the plural of the role: `cards/`, `hooks/`.
+- Graphic assets go in `assets/` (`choice/assets/papers.tsx`).
+- `index.tsx` that renders JSX = composer, allowed.
+- `index.ts` that only re-exports = barrel, forbidden.
+- Path aliases preserved. Dead imports removed.
 
-### Cas `.vue`
+### The `.vue` case
 
-Meme convention. Le SFC n'a pas de contrainte de resolution, donc
-`login.dialog.vue` est sur. Si le projet utilise l'auto-import de composants
-(Nuxt, `unplugin-vue-components`), verifier que le resolveur tolere les points
-avant de renommer : sinon consigner un finding `slice` bloque plutot que
-casser la resolution.
+Same convention. An SFC has no resolution constraint, so `login.dialog.vue` is
+safe. If the project uses component auto-import (Nuxt,
+`unplugin-vue-components`), check that the resolver tolerates dots before
+renaming: otherwise record a blocked `slice` finding rather than break
+resolution.
 
 ## domain
 
-- Si plusieurs valeurs voyagent toujours ensemble, extraire un nom de domaine.
-  Trois primitives correlees ou plus dans une signature = finding.
-- Jamais de forme de retour anonyme (`{ tone: string; text: string }[]`).
-  Declarer et exporter une interface nommee.
-- DTO partageant un socle -> heritage d'interface (`Query extends Profile`).
-- Bannir `any` et `any[]`.
-- Une fonction a plus de trois arguments -> regrouper en DTO typé.
+- If several values always travel together, extract a domain name. Three or
+  more correlated primitives in a signature = finding.
+- Never an anonymous return shape (`{ tone: string; text: string }[]`).
+  Declare and export a named interface.
+- DTOs sharing a base -> interface inheritance (`Query extends Profile`).
+- Ban `any` and `any[]`.
+- A function with more than three arguments -> group them into a typed DTO.
 
 ## literal
 
-- Cles de membre en PascalCase dans l'objet `as const` (`Pending`, `Paid`).
-  La valeur associee reste le litteral d'origine, inchangee.
-- Nom du concept exporte : PascalCase singulier (`OrderStatus`, pas
-  `OrderStatuses` ni `ORDER_STATUS`).
-- Jamais de `enum` TypeScript — voir la justification dans `literal/SKILL.md`.
-- Un cluster dont les valeurs traversent deja un objet `as const` existant
-  n'est pas un nouveau finding : c'est `domain` qui aurait du le rattacher au
-  concept existant plutot que d'en ouvrir un second.
+- Member keys in PascalCase inside the `as const` object (`Pending`, `Paid`).
+  The associated value stays the original literal, unchanged.
+- Name of the exported concept: singular PascalCase (`OrderStatus`, not
+  `OrderStatuses` nor `ORDER_STATUS`).
+- Never a TypeScript `enum` — see the rationale in `literal/SKILL.md`.
+- A cluster whose values already pass through an existing `as const` object is
+  not a new finding: it is `domain` that should have attached it to the existing
+  concept instead of opening a second one.
 
 ## affordance
 
-- Supprimer les agent nouns : `*Manager`, `*Service`, `*Handler`,
-  `*Broadcaster`, `*Sender`, `*Engine`, `*Helper`, `*Util` porteur de logique.
-- Deplacer la methode vers l'objet qui detient l'etat.
+- Remove agent nouns: `*Manager`, `*Service`, `*Handler`, `*Broadcaster`,
+  `*Sender`, `*Engine`, `*Helper`, `*Util` carrying logic.
+- Move the method to the object holding the state.
   `Gardener.water(plant)` -> `plant.water()`.
-- God object : `user.redeemLicense()` -> `license.redeem(user)`.
-- Sans etat entre appels -> `export namespace Domaine { ... }` avec fonctions
-  pures. Avec etat -> entite.
-- Purger les wrappers `get*` qui n'encapsulent rien.
+- God object: `user.redeemLicense()` -> `license.redeem(user)`.
+- Stateless between calls -> `export namespace Domain { ... }` with pure
+  functions. Stateful -> entity.
+- Purge `get*` wrappers that encapsulate nothing.
 
 ## boundary
 
-S'applique a `.tsx`, `.jsx`, `.vue`. Pas aux modules purs.
+Applies to `.tsx`, `.jsx`, `.vue`. Not to pure modules.
 
-- Le parent detient l'etat metier. Le composant detient l'etat de presentation.
-- Interdits en props : `setX`, `showX`, `openX`, `toggleX`, et toute paire
-  `open`/`close` traversant une frontiere.
-- L'etat d'interaction s'internalise dans un hook local (`usePicker()`).
-- Sequence obligatoire, dans cet ordre :
-  detecter primitives repetees -> extraire le nom -> reduire les props ->
-  internaliser l'etat UI. Le decoupage vient plus tard, en vague `split`.
-- Une prop = une affordance. `upload`, `submit`, `close`, `back`, `choose`.
+- The parent holds the business state. The component holds the presentation
+  state.
+- Forbidden as props: `setX`, `showX`, `openX`, `toggleX`, and any
+  `open`/`close` pair crossing a boundary.
+- Interaction state is internalized in a local hook (`usePicker()`).
+- Mandatory sequence, in this order:
+  detect repeated primitives -> extract the name -> reduce the props ->
+  internalize the UI state. Splitting comes later, in the `split` wave.
+- One prop = one affordance. `upload`, `submit`, `close`, `back`, `choose`.
 
 ## split
 
-- Seuil d'inspection : 150 lignes. C'est un **declencheur d'examen**, pas un
-  ordre de decoupage automatique.
-- Ne decouper que sur une frontiere de responsabilite reelle. Si le fichier
-  fait 180 lignes d'une seule chose coherente, le laisser et consigner une
-  derogation ecrite.
-- Coupes typiques d'un module mixte : `measure.ts` / `listen.ts` /
-  `animate.ts` / `hook.ts`.
-- Extraire les SVG inline vers `assets/`.
-- Tout fichier cree ici respecte la convention de nom de la section `slice`.
+- Inspection threshold: 150 lines. It is a **trigger for review**, not an order
+  to split automatically.
+- Split only on a real responsibility boundary. If the file is 180 lines of one
+  coherent thing, leave it and record a written exemption.
+- Typical cuts of a mixed module: `measure.ts` / `listen.ts` / `animate.ts` /
+  `hook.ts`.
+- Extract inline SVGs to `assets/`.
+- Every file created here follows the naming convention in the `slice` section.
 
 ## lexicon
 
-Renommage d'identifiants uniquement.
+Identifier renaming only.
 
-- Props : un mot anglais. Compose `<qualifieur><nom>` tolere si le nom seul
-  est ambigu (`activeTab` oui, `active` non). `<verbe><nom>` et `is<X>`
-  interdits en props.
-- Prefixes bannis : `handle*`, `on*`, `callback*`, `trigger*`, `execute*`,
+- Props: one English word. A compound `<qualifier><noun>` is tolerated when the
+  bare noun is ambiguous (`activeTab` yes, `active` no). `<verb><noun>` and
+  `is<X>` are forbidden as props.
+- Banned prefixes: `handle*`, `on*`, `callback*`, `trigger*`, `execute*`,
   `process*`, `is*`.
-- Suffixes bannis (fuite de structure memoire ou de metadonnee) :
+- Banned suffixes (leaking memory structure or metadata):
   `*Set`, `*Pool`, `*Tag`, `*Flags`, `*Meta`, `*List`, `*Array`.
-- Setter `useState` local : `setX` en camelCase. **Obligatoire, pas un smell.**
-  L'interdiction de `setX` porte sur les props publiques, pas sur les setters
-  locaux.
-- Elevation du vocabulaire : `position` -> `role`, `company` -> `employer`,
+- Local `useState` setter: `setX` in camelCase. **Mandatory, not a smell.**
+  The `setX` ban covers public props, not local setters.
+- Raising the vocabulary: `position` -> `role`, `company` -> `employer`,
   `isRemote` -> `remote`, `selectedSet` -> `chosen`, `isFr` -> `french`.
-- Pas d'abreviations, pas d'acronymes.
-- Nom de fichier : lowercase, kebab-case pour l'entite.
+- No abbreviations, no acronyms.
+- File name: lowercase, kebab-case for the entity.
 
 ## drift
 
-- Aucun fichier hors convention `<entity>.<role>.<ext>` pour un role reconnu.
-- Aucun barrel reintroduit.
-- Aucun agent noun reintroduit.
-- Les fichiers crees par `domain`, `affordance`, `boundary` et `split` sont
-  places et nommes selon la section `slice`.
-- Build vert, typecheck vert.
+- No file off the `<entity>.<role>.<ext>` convention for a recognized role.
+- No barrel reintroduced.
+- No agent noun reintroduced.
+- Files created by `domain`, `affordance`, `boundary` and `split` are placed and
+  named per the `slice` section.
+- Build green, typecheck green.

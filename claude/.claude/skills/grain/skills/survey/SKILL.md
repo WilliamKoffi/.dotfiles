@@ -1,39 +1,39 @@
 ---
 name: survey
-description: Vague 0 du pipeline refactor. Inventorie le scope en lecture seule et produit le ledger des findings. Ne modifie aucun code.
-argument-hint: [chemin]
+description: Wave 0 of the refactor pipeline. Inventories the scope read-only and produces the ledger of findings. Modifies no code.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git log *), Bash(git status *)
 ---
 
-# Vague 0 — survey
+# Wave 0 — survey
 
-Lecture seule. **Tu ne modifies aucun fichier de code.** Seule sortie
-autorisee : `trash/ledger.json`.
+Read-only. **You modify no code file.** The only allowed output is
+`trash/ledger.json`.
 
-## Entree
+## Input
 
-Rulebooks charges par le routeur. Pour chaque famille presente, lis les
-sections de toutes les vagues afin de savoir quoi chercher.
+Rulebooks loaded by the router. For each family present, read the sections of
+every wave so you know what to look for.
 
-## Travail sur `$scope`
+## Work on `$scope`
 
-1. Arbre des fichiers, par extension et par famille.
-2. Graphe de dependances entre repertoires. Signale les cycles.
-3. Candidats de slices : quels fichiers changent ensemble
-   (`git log --name-only` sur les 200 derniers commits).
-4. Utilitaires, hooks, schemas, types dupliques.
-5. Code mort : exports sans consommateur.
-6. Zones intouchables (`src/legacy/`, vendored, genere).
+1. File tree, by extension and by family.
+2. Dependency graph between directories. Report cycles.
+3. Slice candidates: which files change together (`git log --name-only` over the
+   last 200 commits).
+4. Duplicated utilities, hooks, schemas, types.
+5. Dead code: exports with no consumer.
+6. Untouchable zones (`src/legacy/`, vendored, generated).
 
-Pour chaque probleme detecte, emets un finding **adresse a la vague qui le
-possede**. Ne propose aucune correction.
+For each problem detected, emit a finding **addressed to the wave that owns
+it**. Propose no fix.
 
-## Sortie
+## Output
 
-Cree ou met a jour `trash/ledger.json` a la racine du projet :
+Create or update `trash/ledger.json` at the project root:
 
     {
       "scope": "<scope>",
@@ -41,20 +41,19 @@ Cree ou met a jour `trash/ledger.json` a la racine du projet :
       "findings": [
         { "id": "F-001", "wave": "slice", "family": "ecmascript",
           "kind": "naming", "path": "src/hooks/user-hook.ts",
-          "note": "tiret au lieu du point", "status": "open" }
+          "note": "dash instead of dot", "status": "open" }
       ]
     }
 
-Un finding peut porter des champs additionnels propres a sa vague
-proprietaire — par exemple `kind: "literal-cluster"`, ouvert par `domain` pour
-la vague `literal` (voir `domain/SKILL.md`). `survey` ne genere jamais ce
-`kind` lui-meme : il n'a pas la vision du concept qu'un cluster de litteraux
-represente, seule `domain` l'a.
+A finding may carry extra fields specific to its owning wave — for example
+`kind: "literal-cluster"`, opened by `domain` for the `literal` wave (see
+`domain/SKILL.md`). `survey` never generates that `kind` itself: it does not
+have the view of the concept a literal cluster represents; only `domain` does.
 
-Identifiants sequentiels et stables. Ne jamais reutiliser un id retire.
+Sequential, stable identifiers. Never reuse a retired id.
 
-## Gate de sortie
+## Exit gate
 
-- Aucun fichier de code modifie
-- Chaque finding porte une vague proprietaire et une famille
-- Les extensions non couvertes par un rulebook sont listees explicitement
+- No code file modified
+- Every finding carries an owning wave and a family
+- Extensions not covered by a rulebook are listed explicitly

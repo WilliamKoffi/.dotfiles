@@ -1,7 +1,7 @@
 # grain — Shared Convention
 
 > Single source of truth for the `grain` skill suite.
-> Every skill in `~/.claude/plugins/grain/skills/` reads this file.
+> Every skill in `~/.claude/skills/grain/skills/` reads this file.
 > **Never restate these rules inside a SKILL.md.** Reference them by section number.
 
 ---
@@ -28,6 +28,12 @@ the ledger as `deferred` with a one-line reason. Do not silently drop it.
 ### 1.1 — Reject agent nouns
 Classes named `Manager`, `Service`, `Handler`, `Broadcaster`, `Sender`,
 `Processor`, `Coordinator`, `Helper`, `Util` are middlemen. Flag every one.
+
+The ban is not confined to the service layer. A class that retrieves data is
+named for the **set it returns**, never for the act of retrieving it:
+`UserFetcher`, `UserFinder`, `UserQuery`, `UserSearchService` are the same
+violation wearing a persistence costume — the name is `ActiveUsers`. See
+`shelf.md` §S3 for the repository-layer instance of this rule.
 
 Exception: framework-mandated names (`ServiceProvider`, `RequestHandler` from an
 interface you do not own). Record as `exempt:framework`.
@@ -212,6 +218,23 @@ already tracked, `git rm -r --cached trash/` before continuing.
 
 **Status values:** `open` → `closed` | `deferred` | `blocked` | `exempt`
 
+**Optional fields.** Three, all written by the wave that closes a finding and
+read by later waves:
+
+```json
+{
+  "kind": "repository",
+  "created": ["app/Repositories/ActiveUsers.php"],
+  "rename_pending": ["app/Repositories/UserRepository.php"]
+}
+```
+
+`kind` names the wave a finding is addressed to when the rule prefix is not
+enough — `crud`, `repository`, `boundary`, `defect`. `created[]` lists files the
+wave wrote; `lexicon` and `drift` skip them, because a name set by doctrine this
+run must not be re-decided in the same run. `rename_pending[]` is how a wave
+hands a legacy filename to `drift` without doing a `git mv` itself.
+
 **Contract:**
 - Only `survey` may create findings from scratch.
 - Every other skill may close, defer, or block findings **assigned to its own wave**.
@@ -224,13 +247,16 @@ already tracked, `git rm -r --cached trash/` before continuing.
 ## §8. Wave order
 
 ```
- 0        1       2        3         [·]         4          5       6        7        8
-survey → slice → domain → literal → [cruddy] → affordance → boundary → split → lexicon → drift
-  RO                                                                                      RO
+ 0        1       2        3        [·]        [·]         4          5        6       7        8
+survey → slice → domain → literal → [cruddy] → [shelved] → affordance → boundary → split → lexicon → drift
+  RO                                                                                                  RO
 ```
 
-Two waves are conditional and carry no number of their own — a repo may run the
-pipeline end to end without either firing:
+Controllers are shaped before the shelves they call: `shelved` requires
+`cruddy` closed or skipped.
+
+Three waves are conditional and carry no number of their own — a repo may run
+the pipeline end to end without any of them firing:
 
 - `literal` fires only on families whose rulebook has a `## literal` section.
   Today that is `ecmascript` alone; php, rust and nim fold the same extraction
@@ -238,8 +264,13 @@ pipeline end to end without either firing:
 - `cruddy` fires only when `ledger.stack` matches `laravel` or `php` **and** at
   least one open finding carries a `C`-prefixed rule. A php repo with no
   controllers writes `"cruddy": "skipped"` and does nothing. See `crud.md` §C0.
+- `shelved` fires only when the stack's rulebook has a `## shelves` section —
+  today `php` alone — **and** `cruddy` is closed or skipped. Its write scope is
+  the data-access tree only; it creates files but never renames one, handing
+  legacy filenames to `drift` through `rename_pending[]`. Doctrine:
+  `shared/shelf.md`.
 
-Being skipped is a normal outcome for both, not a failure. `drift` must not
+Being skipped is a normal outcome for all three, not a failure. `drift` must not
 report a skipped wave as an unmet invariant.
 
 `survey` is read-only (`allowed-tools: Read, Glob, Grep`). `drift` is read-only

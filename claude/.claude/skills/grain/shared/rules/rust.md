@@ -1,88 +1,87 @@
-# Famille rust
+# Family rust
 
-Extension : `.rs`
+Extension: `.rs`
 
 ## slice
 
-### La convention a points ne s'applique PAS
+### The dot convention does NOT apply
 
-Le nom de module vient du nom de fichier prive de `.rs`. `user.card.rs`
-produirait le module `user.card`, qui n'est pas un identifiant Rust valide.
-Il faudrait un attribut `#[path]` explicite sur chaque module : cout permanent
-pour un gain cosmetique. Rejete.
+A module name comes from the file name minus `.rs`. `user.card.rs` would
+produce the module `user.card`, which is not a valid Rust identifier. It would
+require an explicit `#[path]` attribute on every module: a permanent cost for a
+cosmetic gain. Rejected.
 
-    <module>.rs            snake_case, AUCUN point
+    <module>.rs            snake_case, NO dot
 
-Le role est porte par le **chemin de module**, equivalent natif du suffixe :
+The role is carried by the **module path**, the native equivalent of the suffix:
 
     src/payment/service.rs      ->  crate::payment::service
     src/checkout/card.rs        ->  crate::checkout::card
 
 ### Structure
 
-- Slice verticale = un module par feature : `src/checkout/`, `src/profile/`.
-- Forme moderne preferee : `src/checkout.rs` + `src/checkout/` a cote.
-  Ne pas introduire de nouveaux `mod.rs`. Convertir les existants seulement si
-  le projet a deja migre ; sinon consigner un finding et rester coherent.
-- `pub use` cible pour definir une API publique de module : legitime, ce n'est
-  pas un barrel. Un `pub use` qui reexporte tout sans intention en est un.
-- Code partage : `src/shared/` ou crate dediee a partir de trois consommateurs.
-- Apres tout deplacement : mettre a jour les declarations `mod`, les chemins
-  `use`, et verifier `cargo build` puis `cargo test`.
+- Vertical slice = one module per feature: `src/checkout/`, `src/profile/`.
+- Preferred modern form: `src/checkout.rs` alongside `src/checkout/`.
+  Do not introduce new `mod.rs`. Convert existing ones only if the project has
+  already migrated; otherwise record a finding and stay consistent.
+- A targeted `pub use` defining a module's public API is legitimate — that is
+  not a barrel. A `pub use` that re-exports everything with no intent is one.
+- Shared code: `src/shared/` or a dedicated crate from three consumers onward.
+- After any move: update the `mod` declarations and the `use` paths, then check
+  `cargo build` and `cargo test`.
 
 ## domain
 
-- Newtype plutot que primitive nue quand le type porte une invariante :
-  `struct Employer(String)` plutot que `String`.
-- Primitives correlees -> struct dediee. Trois parametres scalaires correles
-  dans une signature = finding.
-- `enum` pour tout ensemble ferme de variantes actuellement modelise en
-  booleens multiples ou en chaines.
+- Newtype rather than a bare primitive when the type carries an invariant:
+  `struct Employer(String)` rather than `String`.
+- Correlated primitives -> dedicated struct. Three correlated scalar parameters
+  in a signature = finding.
+- `enum` for every closed set of variants currently modeled as multiple booleans
+  or as strings.
 
-Pas de section `## literal` pour cette famille : l'extraction ci-dessus se
-fait directement ici, en vague `domain`. La vague `literal` (3) n'a rien a
-faire sur `.rs`.
-- Pas de tuple de retour au-dela de deux elements : declarer une struct nommee.
-- Eviter `Box<dyn Any>` et le typage evasif.
+No `## literal` section for this family: the extraction above happens directly
+here, in the `domain` wave. The `literal` wave (3) has nothing to do on `.rs`.
+- No return tuple beyond two elements: declare a named struct.
+- Avoid `Box<dyn Any>` and evasive typing.
 
 ## affordance
 
-- Supprimer les structs agent noun : `*Manager`, `*Service`, `*Handler`,
-  `*Engine`, `*Helper` sans etat propre.
-- Le comportement va dans le `impl` du type qui detient l'etat.
+- Remove agent noun structs: `*Manager`, `*Service`, `*Handler`, `*Engine`,
+  `*Helper` with no state of their own.
+- Behavior goes into the `impl` of the type holding the state.
   `Gardener::water(&plant)` -> `plant.water()`.
-- Sans etat entre appels -> fonction libre dans le module. Rust n'a pas besoin
-  d'une struct vide pour grouper : le module **est** le namespace.
-- Un trait n'a d'interet qu'a partir de deux implementeurs, ou pour un point
-  d'extension explicite. Un trait a un seul implementeur est de l'indirection.
-- God object : deplacer la methode vers le type qu'elle mute reellement.
+- Stateless between calls -> free function in the module. Rust does not need an
+  empty struct to group things: the module **is** the namespace.
+- A trait is only worth it from two implementors onward, or for an explicit
+  extension point. A trait with a single implementor is indirection.
+- God object: move the method to the type it actually mutates.
 
 ## split
 
-- Seuil d'inspection : 150 lignes hors tests. Les `#[cfg(test)] mod tests`
-  en fin de fichier ne comptent pas.
-- Decouper par responsabilite, pas par comptage.
-- Un `impl` bloc de plus de dix methodes publiques = finding structurel.
-- Ne pas eclater un type et son `impl` principal dans des fichiers separes.
+- Inspection threshold: 150 lines excluding tests. `#[cfg(test)] mod tests` at
+  the end of a file does not count.
+- Split by responsibility, not by count.
+- An `impl` block with more than ten public methods = structural finding.
+- Do not scatter a type and its main `impl` across separate files.
 
 ## lexicon
 
-- Fonctions, methodes, variables, modules : snake_case.
-- Types, traits, variantes d'enum : CamelCase.
-- Constantes et statics : SCREAMING_SNAKE_CASE.
-- Le prefixe `is_` est **autorise et idiomatique** sur les predicats
-  (`is_empty()`, `is_active()`). L'interdiction de `is*` est une regle de la
-  famille ecmascript, elle ne s'applique pas ici.
-- Bannis : `*_manager`, `*_helper`, `*_util`, `do_*`, `process_*`,
-  `handle_*` hors contrat de framework.
-- Pas d'abreviations sauf celles etablies de l'ecosysteme (`cfg`, `impl`,
+- Functions, methods, variables, modules: snake_case.
+- Types, traits, enum variants: CamelCase.
+- Constants and statics: SCREAMING_SNAKE_CASE.
+- The `is_` prefix is **allowed and idiomatic** on predicates (`is_empty()`,
+  `is_active()`). The `is*` ban is an ecmascript family rule; it does not apply
+  here.
+- Banned: `*_manager`, `*_helper`, `*_util`, `do_*`, `process_*`, `handle_*`
+  outside a framework contract.
+- No abbreviations except the ecosystem's established ones (`cfg`, `impl`,
   `mut`, `ptr`, `len`).
-- Elever le vocabulaire technique vers le domaine : `data` -> ce que c'est.
+- Raise technical vocabulary toward the domain: `data` -> what it actually is.
 
 ## drift
 
-- `cargo build` et `cargo test` verts.
-- `cargo clippy` sans avertissement nouveau par rapport a la base.
-- Aucun point dans un nom de fichier `.rs`.
-- Aucun `#[path]` introduit par le refactoring.
-- Aucune struct agent noun reintroduite.
+- `cargo build` and `cargo test` green.
+- `cargo clippy` with no new warning relative to the baseline.
+- No dot in a `.rs` file name.
+- No `#[path]` introduced by the refactor.
+- No agent noun struct reintroduced.

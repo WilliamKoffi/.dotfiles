@@ -1,67 +1,68 @@
 ---
 name: boundary
-description: Vague 5 du pipeline refactor. Internalise l'etat de presentation, compresse la surface de props, et extrait la logique hors des vues. Ne decoupe aucun fichier.
-argument-hint: [chemin]
+description: Wave 5 of the refactor pipeline. Internalizes presentation state, compresses the prop surface, and extracts logic out of views. Splits no file.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write
 ---
 
-# Vague 5 — boundary
+# Wave 5 — boundary
 
-Mission : **l'etat metier reste dehors, l'etat de presentation rentre dedans.**
+Mission: **business state stays outside, presentation state moves inside.**
 
-Ne s'applique qu'aux familles dont le rulebook possede une section
-`## boundary` : composants ecmascript et vues Blade. Un module pur n'a ni
-props ni etat de presentation — saute-le.
+Applies only to families whose rulebook has a `## boundary` section: ecmascript
+components and Blade views. A pure module has neither props nor presentation
+state — skip it.
 
-## Perimetre autorise
+## Allowed perimeter
 
-- surface de props d'un composant
-- hooks ou objets de presentation internes
-- cablage cote parent impacte par la compression
-- extraction de logique hors des vues, vers l'entite ou un objet de
-  presentation dedie
+- a component's prop surface
+- internal hooks or presentation objects
+- parent-side wiring affected by the compression
+- extracting logic out of views, toward the entity or a dedicated presentation
+  object
 
-## Gele
+## Frozen
 
-- chemins et noms de fichiers
-- definitions de types (vague 2)
-- unions de litteraux extraites en vague 3
-- emplacement des methodes de domaine (vague 4)
-- decoupage de fichiers (vague 6)
-- noms d'identifiants (vague 7)
+- file paths and names
+- type definitions (wave 2)
+- literal unions extracted in wave 3
+- placement of domain methods (wave 4)
+- file splitting (wave 6)
+- identifier names (wave 7)
 
-## Regles
+## Rules
 
-Section `## boundary` du rulebook de chaque famille, dans
+The `## boundary` section of each family's rulebook, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-## Sequence obligatoire
+## Mandatory sequence
 
-Dans cet ordre, sans exception :
+In this order, no exception:
 
-    detecter les primitives repetees
-      -> utiliser le nom ou l'union deja extraits en vagues 2 et 3
-      -> reduire le nombre de props
-      -> internaliser l'etat d'interaction
+    detect the repeated primitives
+      -> use the name or union already extracted in waves 2 and 3
+      -> reduce the number of props
+      -> internalize the interaction state
 
-Le decoupage n'appartient pas a cette vague. Un composant qui reste gros apres
-compression sera traite en vague 6 — et il sera souvent devenu petit tout seul.
+Splitting does not belong to this wave. A component still large after
+compression will be handled in wave 6 — and it will often have shrunk on its
+own.
 
-## Signaux
+## Signals
 
-- prop `setX`, `showX`, `openX`, `toggleX`
-- paire ouverture / fermeture traversant une frontiere
-- plus de trois callbacks en props
-- plus de deux booleens en props
-- requete, regle metier ou appel reseau a l'interieur d'une vue
+- a `setX`, `showX`, `openX`, `toggleX` prop
+- an open/close pair crossing a boundary
+- more than three callbacks in props
+- more than two booleans in props
+- a query, business rule, or network call inside a view
 
-## Gate de sortie
+## Exit gate
 
-- Aucune prop setter ni mecanique d'ouverture dans le scope
-- Aucune requete ni regle metier residuelle dans une vue
-- Rendu identique a l'octet pres
-- Suite de tests verte, sans aucune modification des tests
-- Findings `boundary` fermes ou justifies
+- No setter prop nor open/close mechanics in scope
+- No residual query or business rule in a view
+- Rendered output identical byte for byte
+- Test suite green, with no test modified
+- `boundary` findings closed or justified

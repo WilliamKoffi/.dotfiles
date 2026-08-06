@@ -1,52 +1,55 @@
 ---
 name: lexicon
-description: Vague 7 du pipeline refactor. Renomme les identifiants selon le rulebook de chaque famille. Ne modifie rien d'autre.
-argument-hint: [chemin]
+description: Wave 7 of the refactor pipeline. Renames identifiers per each family's rulebook. Changes nothing else.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write
 ---
 
-# Vague 7 — lexicon
+# Wave 7 — lexicon
 
-Mission : **renommer. Rien d'autre.**
+Mission: **rename. Nothing else.**
 
-Le renommage arrive en dernier parce qu'il touche tous les sites d'appel et
-qu'il n'a de sens qu'une fois le placement, la forme et l'ownership figes.
-Le diff de cette vague doit etre lisible comme un pur renommage.
+Renaming comes last because it touches every call site and only makes sense once
+placement, shape and ownership are frozen. This wave's diff must read as a pure
+rename.
 
-## Perimetre autorise
+## Allowed perimeter
 
-- noms d'identifiants uniquement : variables, parametres, proprietes, props,
-  methodes, fonctions, types
+- identifier names only: variables, parameters, properties, props, methods,
+  functions, types
 
-## Gele
+## Frozen
 
-- absolument tout le reste : chemins, noms de fichiers, structure, types,
-  ownership, props en tant que surface, comportement
+- absolutely everything else: paths, file names, structure, types, ownership,
+  props as a surface, behavior
+- every path listed in `findings[].created[]` by `shelved`: those names were just
+  set by doctrine in this same run, and renaming them here is an undo in flight.
+  The paths in `rename_pending[]` belong to `drift`, not to you.
 
-## Regles
+## Rules
 
-Section `## lexicon` du rulebook de chaque famille, dans
+The `## lexicon` section of each family's rulebook, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-Si la section est absente pour une extension, le fichier est hors perimetre.
+If the section is absent for an extension, the file is out of perimeter.
 
-**Les regles de casse et de prefixe divergent fortement entre familles.**
-Le prefixe predicat `is` est interdit en ecmascript et idiomatique en PHP,
-Rust et Nim. N'applique jamais la regle d'une famille a une autre.
+**Case and prefix rules diverge sharply between families.** The `is` predicate
+prefix is forbidden in ecmascript and idiomatic in PHP, Rust and Nim. Never apply
+one family's rule to another.
 
-## Methode
+## Method
 
-Un renommage a la fois, sur tout le scope, verifie, puis le suivant. Un lot
-de renommages simultanes rend le conflit indetectable.
+One rename at a time, across the whole scope, verified, then the next. A batch of
+simultaneous renames makes the conflict undetectable.
 
-## Gate de sortie
+## Exit gate
 
-- Zero prefixe interdit par la famille concernee
-- Zero suffixe de structure memoire ou de metadonnee
-- Aucune abreviation nouvelle
-- Build vert, typecheck vert
-- Suite de tests verte, sans aucune modification des tests
-- Findings `lexicon` fermes ou justifies
+- Zero prefix forbidden by the family concerned
+- Zero memory-structure or metadata suffix
+- No new abbreviation
+- Build green, typecheck green
+- Test suite green, with no test modified
+- `lexicon` findings closed or justified

@@ -1,201 +1,298 @@
-# Famille php
+# Family php
 
-Extensions : `.php`, `.blade.php`
+Extensions: `.php`, `.blade.php`
 
-Deux profils distincts. Toujours resoudre `.blade.php` avant `.php`.
+Two distinct profiles. Always resolve `.blade.php` before `.php`.
 
 ---
 
-# Profil : php
+# Profile: php
 
 ## slice
 
-### La convention a points ne s'applique PAS
+### The dot convention does NOT apply
 
-PSR-4 exige que le nom de fichier corresponde exactement au nom de la classe
-qu'il contient. `payment.service.php` casse l'autoload.
+PSR-4 requires the file name to match exactly the name of the class it
+contains. `payment.service.php` breaks autoloading.
 
-    <ClassName>.php        en StudlyCase
+    <ClassName>.php        in StudlyCase
 
-Le role est porte par le **namespace et le repertoire**, qui sont l'equivalent
-natif PHP du suffixe :
+The role is carried by the **namespace and the directory**, which are PHP's
+native equivalent of the suffix:
 
     app/Services/PaymentService.php     -> App\Services\PaymentService
     app/Models/User.php                 -> App\Models\User
     app/Http/Controllers/OrderController.php
 
-Ne jamais introduire de point dans un nom de fichier PHP autre qu'une vue.
+Never introduce a dot into a PHP file name other than a view.
 
 ### Structure
 
-- Slice verticale sous `app/Features/<Feature>/` ou modules Laravel, selon ce
-  que le projet utilise deja. Ne pas imposer une des deux si l'autre est en
-  place : consigner un finding et laisser le choix.
-- `composer.json` : mettre a jour le mapping PSR-4 apres tout deplacement de
-  namespace, puis `composer dump-autoload`.
-- Un fichier = une classe. Pas de classe secondaire en fin de fichier.
-- Verifier les references par chaine : `config/`, conteneur de services,
-  `::class` dans les migrations. Un `git mv` seul ne suffit pas en PHP.
+- Vertical slice under `app/Features/<Feature>/` or Laravel modules, depending
+  on what the project already uses. Do not impose one when the other is in
+  place: record a finding and leave the choice open.
+- `composer.json`: update the PSR-4 mapping after any namespace move, then
+  `composer dump-autoload`.
+- One file = one class. No secondary class at the end of a file.
+- Check string references: `config/`, the service container, `::class` in
+  migrations. A bare `git mv` is not enough in PHP.
 
 ## domain
 
-- Value objects plutot que primitives correlees. Trois arguments scalaires
-  correles dans une signature = finding.
-- Types de retour declares partout. Pas de `array` nu quand la forme est
-  connue : declarer un DTO ou un objet dedie.
-- `declare(strict_types=1)` en tete de chaque fichier.
-- Enum PHP 8.1 pour tout ensemble ferme de valeurs actuellement en constantes
-  de classe ou en chaines.
+- Value objects rather than correlated primitives. Three correlated scalar
+  arguments in a signature = finding.
+- Return types declared everywhere. No bare `array` when the shape is known:
+  declare a DTO or a dedicated object.
+- `declare(strict_types=1)` at the top of every file.
+- PHP 8.1 enum for every closed set of values currently held in class constants
+  or strings.
 
-Pas de section `## literal` pour ce profil : l'extraction ci-dessus se fait
-directement ici, en vague `domain`. La vague `literal` (3) n'a rien a faire
-sur `.php`.
+No `## literal` section for this profile: the extraction above happens directly
+here, in the `domain` wave. The `literal` wave (3) has nothing to do on `.php`.
 
 ## cruddy
 
-Seule famille ou cette vague s'applique. Les regles sont dans
-`../crud.md` (§C1 a §C12) et les exemples dans
-`../../skills/cruddy/references/laravel.md` — ne pas les repeter ici. Cette
-section ne porte que ce qui est propre au profil php.
+The only family where this wave applies. The rules live in `../crud.md`
+(§C1 to §C12) and the examples in
+`../../skills/cruddy/references/laravel.md` — do not repeat them here. This
+section carries only what is specific to the php profile.
 
-- Perimetre de detection : `app/Http/Controllers/**`. Un fichier hors de la
-  s'analyse en `affordance`, pas ici.
-- Toute methode publique routee hors des sept verbes est un finding `C1`.
-  `__invoke()` compte comme conforme (§C6).
-- `attach()` / `detach()` dans un corps d'action : finding `C4`, sans
-  exception. Le pivot devient un modele.
-- `find($id)` dans une action : finding `C9`. Route model binding partout.
-- Validation en ligne dans l'action plutot qu'en FormRequest : finding `C8`.
-- Logique metier dans le corps de l'action : finding `C8`, **defere a
-  `affordance`**. Cette vague reshape le routage, elle n'extrait pas de
-  domaine.
+- Detection perimeter: `app/Http/Controllers/**`. A file outside it is analyzed
+  in `affordance`, not here.
+- Any routed public method outside the seven verbs is a `C1` finding.
+  `__invoke()` counts as conforming (§C6).
+- `attach()` / `detach()` inside an action body: `C4` finding, no exception. The
+  pivot becomes a model.
+- `find($id)` in an action: `C9` finding. Route model binding everywhere.
+- Inline validation in the action rather than a FormRequest: `C8` finding.
+- Business logic in the action body: `C8` finding, **deferred to
+  `affordance`**. This wave reshapes routing; it does not extract domain.
 
-**Frontiere avec `affordance`.** Les deux vagues touchent les controleurs et
-se marchent dessus si on n'y prend pas garde. La coupe : `cruddy` decide
-*quelle action vit sur quel controleur*, `affordance` decide *ce qui ne
-devrait pas etre dans un controleur du tout*. Un `*Service` injecte dans un
-controleur correctement decoupe n'est pas un finding `cruddy`.
+**Boundary with `affordance`.** Both waves touch controllers and will step on
+each other if you are not careful. The cut: `cruddy` decides *which action lives
+on which controller*, `affordance` decides *what should not be in a controller
+at all*. A `*Service` injected into a properly split controller is not a
+`cruddy` finding.
 
-**Collision idiomatique assumee**, meme nature que celle notee en
-`affordance` : Laravel tolere les controleurs a actions custom et la
-documentation officielle en montre. Cette regle les rejette. Ne pas
-"corriger" vers l'idiome.
+**Deliberate collision with the idiom**, of the same nature as the one noted in
+`affordance`: Laravel tolerates controllers with custom actions and the official
+documentation shows them. This rule rejects them. Do not "fix" toward the idiom.
 
-## affordance
+## shelves
 
-- Supprimer les agent nouns : `*Manager`, `*Service`, `*Handler`, `*Helper`,
-  `*Engine`, `*Repository` sans persistance reelle.
-- Deplacer la methode vers l'entite qui detient l'etat.
-  `PaymentService::charge($order)` -> `$order->charge()`.
-- God object : `User::createSubscription()` -> `Subscription::start($user)`.
-- Sans etat -> classe finale a methodes statiques, ou fonction dans un
-  fichier de namespace. Pas d'instanciation ceremonielle.
-- Controleurs : si un controleur coordonne trois responsabilites sans lien,
-  extraire un nom de domaine, pas un service.
+Implements `../shelf.md` §S0–§S10 for Eloquent. Consumed by
+`../../skills/shelved` when `ledger.stack` is `laravel` or `php`.
+Before/after examples: `../../skills/shelved/references/patterns.md`.
+Do not restate here what `shelf.md` already says — this section carries only
+what is specific to Eloquent.
 
-**Collision idiomatique assumee.** L'ecosysteme Laravel encourage les classes
-`*Service` et le pattern Action. Cette regle les rejette au profit de
-l'affordance. C'est un choix delibere du projet, pas une erreur : ne pas
-"corriger" vers l'idiome Laravel. Si un `*Service` est impose par un package
-tiers, consigner une derogation et le laisser.
+**Boundary with `cruddy`**: `cruddy` owns `app/Http/**`, `shelved` owns the
+data-access tree. Both rename classes, never the same ones. A rewrite here that
+would require touching a controller is abandoned and opens a `boundary`
+finding.
 
-## split
+### P-S1 — What counts as a shelf
 
-- Seuil d'inspection : 150 lignes. Declencheur d'examen, pas ordre de coupe.
-- Un controleur au-dela de sept methodes publiques = finding structurel, pas
-  un probleme de taille.
-- Traits : extraire seulement si le comportement est reellement partage par
-  deux classes ou plus. Un trait a un seul consommateur est un deplacement de
-  bruit, pas une decomposition.
+In scope: `App\Repositories\*`, any class ending `Repository`, `Dao`, `Query`,
+`Finder`, `Gateway`, or `Store`, and any class whose methods return
+`Collection`/`Model`/`LengthAwarePaginator` built from a query.
 
-## lexicon
+Out of scope: Eloquent models themselves, form requests, resources, policies.
+An Active Record model is not a shelf — do not wrap models in shelves that
+exist only to call `Model::all()`.
 
-- Classes : StudlyCase. Methodes : camelCase. Constantes : SCREAMING_SNAKE.
-  Proprietes : camelCase.
-- Le prefixe `is` est **autorise** sur les methodes predicat (`isActive()`) :
-  c'est l'idiome PHP. L'interdiction porte sur les proprietes booleennes
-  (`$isRemote` -> `$remote`).
-- Prefixes bannis sur les methodes : `handle*` (sauf contrat de framework),
-  `process*`, `execute*`, `doX*`.
-- Purger les `get*`/`set*` qui n'encapsulent rien : preferer des proprietes
-  typees ou des accesseurs nommes par le domaine.
-- Pas d'abreviations, pas d'acronymes hors sigles etablis du domaine.
+### P-S2 — Local scopes are not an exemption
 
-## drift
+```php
+User::active()->get();           // ❌ builder leak at the call site (§S6)
+(new ActiveUsers)->all();        // ✅
+```
 
-- Chaque nom de fichier correspond au nom de sa classe.
-- `composer dump-autoload` sans avertissement.
-- Aucun agent noun reintroduit.
-- `declare(strict_types=1)` present partout.
+A local scope may live on the model and be used *inside* a shelf. It may never
+be chained by a caller. Chaining is how the vocabulary escapes.
+
+### P-S3 — Builder leaks, concretely (§S6)
+
+Any return type of `Builder`, `EloquentBuilder`, `Relation`, `HasMany`,
+`BelongsToMany`, or `QueryBuilder` is a violation, including implicit returns
+of `$this->model->where(...)`. Terminate every query inside the shelf with
+`get()`, `first()`, `firstOrFail()`, `count()`, `paginate()`, `save()`, or
+`delete()`.
+
+### P-S4 — Scope binding via constructor (§S4)
+
+```php
+final class TeamMembers
+{
+    public function __construct(private Team $team) {}
+
+    public function all(): Collection
+    {
+        return $this->team->members()->get();
+    }
+}
+```
+
+Bind the parent model, not its id. Route-model binding already resolved it.
+
+### P-S5 — Pivot shelves
+
+A pivot promoted to a real model by `shared/crud.md` gets its own shelf:
+`Subscriptions`, `Enrollments`, `Likes`. `attach()` / `detach()` never appear
+outside a pivot shelf's `save()` / `remove()`.
+
+### P-S6 — `find()` throws
+
+`find($id)` maps to `findOrFail($id)` and returns `Model`, never `?Model`. Use
+`first()` when absence is expected and returns null. Two different questions,
+two different methods — do not collapse them into a nullable `find()`.
+
+### P-S7 — Laziness
+
+Return `Collection` from `all()`. Use `LazyCollection` only where the legacy
+code already used `cursor()`; introducing or removing laziness changes memory
+behavior and violates §S10.
+
+### P-S8 — Eloquent Criteria (§S7)
+
+```php
+$shelf->matching(new UserCriteria($request->validated()))->all();
+```
+
+`UserCriteria` is a readonly class with typed nullable properties, one per
+search axis. It exposes `applyTo(Builder $q): Builder` and is the only place a
+builder is legally passed around — inside the shelf, never across its boundary.
+
+### P-S9 — Naming and location
+
+`app/Repositories/{Set}.php`, class `final class {Set}`. Plural noun phrase,
+no `Repository` suffix on new shelves — `ActiveUsers`, not
+`ActiveUsersRepository`. Existing `*Repository` classes keep their filename
+until `grain:drift` runs; record them in `findings[].rename_pending[]`.
+
+### P-S10 — Container binding
+
+If an interface exists (`UserRepositoryInterface`), do not create a second
+abstraction. Either the interface is the shelf's contract — in which case it
+holds exactly the seven methods — or it is dead weight, and the shelf is bound
+concretely. Never leave both an eight-method interface and a seven-method
+implementation.
 
 ---
 
-# Profil : blade
+## affordance
 
-Concentration sur l'architecture et l'extraction de logique hors des vues.
-Aucune convention cosmetique propre a Blade.
+- Remove agent nouns: `*Manager`, `*Service`, `*Handler`, `*Helper`,
+  `*Engine`, `*Repository` with no real persistence.
+- Move the method to the entity holding the state.
+  `PaymentService::charge($order)` -> `$order->charge()`.
+- God object: `User::createSubscription()` -> `Subscription::start($user)`.
+- Stateless -> final class with static methods, or a function in a namespace
+  file. No ceremonial instantiation.
+- Controllers: if a controller coordinates three unrelated responsibilities,
+  extract a domain name, not a service.
+
+**Deliberate collision with the idiom.** The Laravel ecosystem encourages
+`*Service` classes and the Action pattern. This rule rejects them in favor of
+the affordance. It is a deliberate project choice, not a mistake: do not "fix"
+toward the Laravel idiom. If a `*Service` is imposed by a third-party package,
+record an exemption and leave it.
+
+## split
+
+- Inspection threshold: 150 lines. A trigger for review, not an order to cut.
+- A controller beyond seven public methods = structural finding, not a size
+  problem.
+- Traits: extract only if the behavior is genuinely shared by two or more
+  classes. A trait with a single consumer moves noise around, it does not
+  decompose anything.
+
+## lexicon
+
+- Classes: StudlyCase. Methods: camelCase. Constants: SCREAMING_SNAKE.
+  Properties: camelCase.
+- The `is` prefix is **allowed** on predicate methods (`isActive()`): that is
+  the PHP idiom. The ban covers boolean properties (`$isRemote` -> `$remote`).
+- Banned prefixes on methods: `handle*` (except a framework contract),
+  `process*`, `execute*`, `doX*`.
+- Purge `get*`/`set*` that encapsulate nothing: prefer typed properties or
+  accessors named by the domain.
+- No abbreviations, no acronyms beyond established domain initialisms.
+
+## drift
+
+- Every file name matches the name of its class.
+- `composer dump-autoload` with no warning.
+- No agent noun reintroduced.
+- `declare(strict_types=1)` present everywhere.
+
+---
+
+# Profile: blade
+
+Focus on architecture and on extracting logic out of views. No cosmetic
+convention specific to Blade.
 
 ## slice
 
-### Le point est deja reserve
+### The dot is already taken
 
-Laravel resout `view('login.dialog')` en `login/dialog.blade.php`. Un point
-supplementaire dans le nom de fichier rend la vue introuvable.
+Laravel resolves `view('login.dialog')` to `login/dialog.blade.php`. An extra
+dot in the file name makes the view unreachable.
 
-    <name>.blade.php       lowercase, kebab-case, AUCUN point additionnel
+    <name>.blade.php       lowercase, kebab-case, NO additional dot
 
-Le role est porte par le repertoire seul :
+The role is carried by the directory alone:
 
     resources/views/components/cards/user.blade.php
     resources/views/components/dialogs/login.blade.php
 
 ### Structure
 
-- Vues co-localisees avec leur feature quand le projet est en slices.
-- Composants Blade sous `components/<categorie>/`.
-- Apres tout deplacement : mettre a jour les appels `view()`,
-  `@include`, `@extends`, `<x-...>` et les references en configuration.
-  Ce sont des chaines, aucun compilateur ne les verifiera.
+- Views co-located with their feature when the project is sliced.
+- Blade components under `components/<category>/`.
+- After any move: update the `view()`, `@include`, `@extends`, `<x-...>` calls
+  and the references in configuration. Those are strings; no compiler will
+  check them.
 
 ## boundary
 
-C'est le coeur du profil blade. Meme mission que `boundary` cote composants :
-la vue ne detient que la presentation.
+This is the heart of the blade profile. Same mission as `boundary` on the
+component side: the view holds presentation only.
 
-Interdits dans une vue :
+Forbidden in a view:
 
-- requete base de donnees, appel Eloquent, `::where`, `::find`, `::all`
-- regle metier, calcul de prix, decision d'autorisation
-- appel HTTP, acces au conteneur, `app()`, `resolve()`
-- plus de deux niveaux de conditionnelle imbriquee
+- database query, Eloquent call, `::where`, `::find`, `::all`
+- business rule, price computation, authorization decision
+- HTTP call, container access, `app()`, `resolve()`
+- more than two levels of nested conditional
 
-Destination de la logique extraite, par ordre de preference :
+Destination of extracted logic, in order of preference:
 
-1. l'entite qui detient l'etat (affordance sur le modele)
-2. un view model ou un objet de presentation dedie
-3. un view composer, si la donnee est requise par plusieurs vues
-4. le controleur, en dernier recours
+1. the entity holding the state (affordance on the model)
+2. a view model or a dedicated presentation object
+3. a view composer, if the data is required by several views
+4. the controller, as a last resort
 
-Chaque extraction preserve le rendu a l'octet pres.
+Every extraction preserves the rendered output byte for byte.
 
 ## split
 
-- Seuil d'inspection : 150 lignes.
-- Decouper par region de presentation reelle, en composants Blade, pas par
-  comptage de lignes.
-- Une vue dont le decoupage n'est pas evident apres extraction de la logique
-  est probablement deja correcte : consigner une derogation.
+- Inspection threshold: 150 lines.
+- Split by real presentation region, into Blade components, not by line count.
+- A view whose split is not obvious once the logic is extracted is probably
+  already correct: record an exemption.
 
 ## lexicon
 
-- Noms de fichiers et de repertoires : lowercase, kebab-case.
-- Variables passees a la vue : nom de domaine, pas d'implementation.
-  `$rows` -> `$orders`. `$data` -> le nom de ce que c'est.
-- Pas de `$isX` : `$isActive` -> `$active`.
-- Slots et props de composants : un mot anglais.
+- File and directory names: lowercase, kebab-case.
+- Variables passed to the view: a domain name, not an implementation one.
+  `$rows` -> `$orders`. `$data` -> the name of what it is.
+- No `$isX`: `$isActive` -> `$active`.
+- Component slots and props: one English word.
 
 ## drift
 
-- Aucun point additionnel dans un nom de vue.
-- Toutes les references `view()`, `@include`, `@extends`, `<x-...>` resolvent.
-- Aucune requete ni regle metier residuelle dans une vue.
+- No additional dot in a view name.
+- Every `view()`, `@include`, `@extends`, `<x-...>` reference resolves.
+- No residual query or business rule in a view.

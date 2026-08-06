@@ -1,57 +1,57 @@
 ---
 name: split
-description: Vague 6 du pipeline refactor. Decoupe ce qui est encore trop gros, aux frontieres qui ont survecu a la compression. Ne renomme aucun identifiant.
-argument-hint: [chemin]
+description: Wave 6 of the refactor pipeline. Splits what is still too large, at the boundaries that survived compression. Renames no identifier.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash(git mv *), Bash(git status *)
 ---
 
-# Vague 6 — split
+# Wave 6 — split
 
-Mission : **decouper ce qui est reste gros, la ou la responsabilite change.**
+Mission: **split what stayed large, where the responsibility changes.**
 
-Cette vague arrive tard **par construction**. Les vagues 2 a 4 ont supprime la
-plomberie ; beaucoup de fichiers qui depassaient le seuil sont deja rentres
-dans les clous. Decouper avant aurait produit de mauvaises coupes.
+This wave comes late **by construction**. Waves 2 to 4 removed the plumbing;
+many files that were over the threshold are already back within it. Splitting
+earlier would have produced bad cuts.
 
-## Perimetre autorise
+## Allowed perimeter
 
-- decoupage d'un fichier en plusieurs
-- creation de composeurs
-- extraction d'assets graphiques
-- imports impactes par un decoupage
+- splitting one file into several
+- creating composers
+- extracting graphic assets
+- imports affected by a split
 
-## Gele
+## Frozen
 
-- surface de props et ownership (vague 5)
-- definitions de types (vague 2)
-- unions de litteraux extraites en vague 3
-- emplacement des methodes de domaine (vague 4)
-- noms d'identifiants (vague 7)
-- comportement a l'execution
+- prop surface and ownership (wave 5)
+- type definitions (wave 2)
+- literal unions extracted in wave 3
+- placement of domain methods (wave 4)
+- identifier names (wave 7)
+- runtime behavior
 
-## Regles
+## Rules
 
-Section `## split` du rulebook de chaque famille, dans
+The `## split` section of each family's rulebook, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-**Le seuil de 150 lignes est un declencheur d'examen, jamais un ordre de
-coupe.** Un fichier de 180 lignes qui fait une seule chose coherente reste
-entier : consigne une derogation ecrite dans le ledger et passe au suivant.
+**The 150-line threshold is a trigger for review, never an order to cut.** A
+180-line file that does one coherent thing stays whole: record a written
+exemption in the ledger and move on.
 
-Ne decoupe que sur une frontiere de responsabilite reelle.
+Split only on a real responsibility boundary.
 
-## Contrainte de placement
+## Placement constraint
 
-Tout fichier cree ici respecte la convention de nom de la vague 1 pour sa
-famille. Consulte la section `## slice` du rulebook — tu ne redecides rien.
+Every file created here follows wave 1's naming convention for its family.
+Consult the `## slice` section of the rulebook — you re-decide nothing.
 
-## Gate de sortie
+## Exit gate
 
-- Aucun fichier au-dessus du seuil sans derogation ecrite
-- Tout fichier cree conforme a la convention de sa famille
-- Aucun cycle d'import introduit
-- Suite de tests verte, sans aucune modification des tests
-- Findings `split` fermes ou justifies
+- No file above the threshold without a written exemption
+- Every created file conforms to its family's convention
+- No import cycle introduced
+- Test suite green, with no test modified
+- `split` findings closed or justified

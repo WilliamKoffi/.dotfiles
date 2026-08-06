@@ -1,55 +1,55 @@
 ---
 name: affordance
-description: Vague 4 du pipeline refactor. Deplace le comportement vers l'objet qui detient l'etat et supprime les agent nouns. Ne renomme aucun fichier.
-argument-hint: [chemin]
+description: Wave 4 of the refactor pipeline. Moves behavior to the object holding the state and removes agent nouns. Renames no file.
+argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Edit, Write
 ---
 
-# Vague 4 — affordance
+# Wave 4 — affordance
 
-Mission : **le comportement vit sur l'objet qui detient l'etat.**
+Mission: **behavior lives on the object holding the state.**
 
-## Perimetre autorise
+## Allowed perimeter
 
-- emplacement des methodes et fonctions
-- appartenance a une classe, un impl, un module, un namespace
-- suppression des classes agent noun
-- sites d'appel impactes
+- placement of methods and functions
+- membership in a class, an impl, a module, a namespace
+- removal of agent noun classes
+- affected call sites
 
-## Gele
+## Frozen
 
-- chemins et noms de fichiers
-- definitions de types creees en vague 2
-- unions de litteraux extraites en vague 3
-- props et etat de presentation (vague 5)
-- noms d'identifiants (vague 7)
-- comportement a l'execution
+- file paths and names
+- type definitions created in wave 2
+- literal unions extracted in wave 3
+- props and presentation state (wave 5)
+- identifier names (wave 7)
+- runtime behavior
 
-## Regles
+## Rules
 
-Section `## affordance` du rulebook de chaque famille, dans
+The `## affordance` section of each family's rulebook, in
 `${CLAUDE_PLUGIN_ROOT}/shared/rules/`.
 
-Principe commun : deplacer la methode vers l'objet qui detient l'etat, pas
-vers celui qui execute l'action.
+Common principle: move the method to the object holding the state, not to the one
+performing the action.
 
-## Entite ou namespace
+## Entity or namespace
 
-La vague 2 a decide **qu'un nom manquait**. Tu decides **de quelle nature il
-est** :
+Wave 2 decided **that a name was missing**. You decide **what kind of thing it
+is**:
 
-- il conserve de l'etat entre deux appels -> entite
-- il n'en conserve pas -> namespace, module, ou fonction libre
+- it keeps state between two calls -> entity
+- it does not -> namespace, module, or free function
 
-Ne cree jamais un objet vide pour grouper des fonctions sans etat. Chaque
-langage cible a deja un mecanisme de regroupement : utilise le sien.
+Never create an empty object to group stateless functions. Every target language
+already has a grouping mechanism: use its own.
 
-## Gate de sortie
+## Exit gate
 
-- Zero classe ou struct agent noun dans le scope
-- Aucune methode dont le corps mute principalement un autre objet
-- Suite de tests verte, sans aucune modification des tests
-- Findings `affordance` fermes ou justifies
+- Zero agent noun class or struct in scope
+- No method whose body mainly mutates another object
+- Test suite green, with no test modified
+- `affordance` findings closed or justified

@@ -1,97 +1,93 @@
-# Famille nim
+# Family nim
 
-Extension : `.nim`
+Extension: `.nim`
 
 ## slice
 
-### La convention a points ne s'applique PAS
+### The dot convention does NOT apply
 
-Le nom de module vient du nom de fichier. Le point est l'operateur d'acces de
-champ en Nim ; un nom de module doit etre un identifiant valide.
-`user.card.nim` est inimportable.
+A module name comes from the file name. The dot is the field-access operator in
+Nim; a module name must be a valid identifier. `user.card.nim` cannot be
+imported.
 
-    <module>.nim           lowercase, AUCUN point
+    <module>.nim           lowercase, NO dot
 
-Le role est porte par le **chemin de repertoire** :
+The role is carried by the **directory path**:
 
     src/payment/service.nim     ->  import payment/service
     src/checkout/card.nim       ->  import checkout/card
 
 ### Structure
 
-- Slice verticale = un repertoire par feature.
-- Code partage a partir de trois consommateurs independants.
-- Un module qui ne fait que reexporter par `export` sans intention d'API
-  publique est un barrel : supprimer. Un `export` cible qui definit l'API
-  publique du paquet est legitime.
-- Apres tout deplacement : mettre a jour les `import`, `include`, `export`,
-  et les chemins du fichier `.nimble`. Verifier avec `nim check`.
+- Vertical slice = one directory per feature.
+- Shared code from three independent consumers onward.
+- A module that only re-exports through `export` with no public-API intent is a
+  barrel: remove it. A targeted `export` that defines the package's public API
+  is legitimate.
+- After any move: update the `import`, `include`, `export` statements and the
+  paths in the `.nimble` file. Verify with `nim check`.
 
-### Note sur l'insensibilite au style
+### Note on style insensitivity
 
-Nim ignore la casse et les underscores dans les identifiants apres le premier
-caractere : `myVar`, `my_var` et `myvar` designent le meme symbole. Cela vaut
-pour les identifiants, **pas pour les noms de fichiers**, qui restent
-sensibles a la casse sur les systemes de fichiers concernes. Ne pas se fier a
-cette tolerance lors des renommages de fichiers.
+Nim ignores case and underscores in identifiers after the first character:
+`myVar`, `my_var` and `myvar` all name the same symbol. That holds for
+identifiers, **not for file names**, which remain case-sensitive on the file
+systems concerned. Do not rely on this tolerance when renaming files.
 
 ## domain
 
-- `distinct` type plutot que primitive nue quand le type porte une invariante :
-  `type Employer = distinct string`.
-- Primitives correlees -> `object` dedie. Trois parametres scalaires correles
-  dans une signature = finding.
-- `enum` pour tout ensemble ferme de valeurs modelise en booleens ou en
-  chaines.
+- `distinct` type rather than a bare primitive when the type carries an
+  invariant: `type Employer = distinct string`.
+- Correlated primitives -> dedicated `object`. Three correlated scalar
+  parameters in a signature = finding.
+- `enum` for every closed set of values modeled as booleans or as strings.
 
-Pas de section `## literal` pour cette famille : l'extraction ci-dessus se
-fait directement ici, en vague `domain`. La vague `literal` (3) n'a rien a
-faire sur `.nim`.
-- Declarer les types de retour explicitement. Pas de tuple anonyme au-dela de
-  deux champs : nommer un `object`.
+No `## literal` section for this family: the extraction above happens directly
+here, in the `domain` wave. The `literal` wave (3) has nothing to do on `.nim`.
+- Declare return types explicitly. No anonymous tuple beyond two fields: name an
+  `object`.
 
 ## affordance
 
-- Supprimer les objets agent noun : `*Manager`, `*Service`, `*Handler`,
-  `*Engine`.
-- Le comportement va sur le type qui detient l'etat, en premier parametre.
+- Remove agent noun objects: `*Manager`, `*Service`, `*Handler`, `*Engine`.
+- Behavior goes on the type holding the state, as the first parameter.
 
-**Particularite Nim.** L'appel de fonction uniforme (UFCS) rend `plant.water()`
-et `water(plant)` strictement equivalents. La distinction affordance / ability
-disparait donc au site d'appel — mais elle persiste la ou elle compte
-vraiment : dans le module qui heberge la procedure et dans le premier
-parametre. La regle devient : **la procedure vit dans le module du type
-qu'elle mute**, et ce type est son premier parametre. Ne pas se contenter du
-style d'appel pour declarer la vague satisfaite.
+**Nim specificity.** Uniform function call syntax (UFCS) makes `plant.water()`
+and `water(plant)` strictly equivalent. The affordance / ability distinction
+therefore disappears at the call site — but it survives where it really counts:
+in the module hosting the procedure and in the first parameter. The rule becomes:
+**the procedure lives in the module of the type it mutates**, and that type is
+its first parameter. Do not take the call style alone as proof the wave is
+satisfied.
 
-- Sans etat entre appels -> procedure libre dans le module. Le module est le
-  namespace ; pas d'objet ceremoniel pour grouper.
-- Un `method` (dispatch dynamique) n'a d'interet qu'avec polymorphisme reel.
-  Sinon `proc` ou `func`.
+- Stateless between calls -> free procedure in the module. The module is the
+  namespace; no ceremonial object to group things.
+- A `method` (dynamic dispatch) is only worth it with real polymorphism.
+  Otherwise `proc` or `func`.
 
 ## split
 
-- Seuil d'inspection : 150 lignes.
-- Decouper par responsabilite, pas par comptage.
-- Garder ensemble un type et les procedures qui constituent son API primaire.
-- Attention aux cycles d'import : Nim les tolere mal. Si un decoupage cree un
-  cycle, la coupe est au mauvais endroit — consigner et reexaminer.
+- Inspection threshold: 150 lines.
+- Split by responsibility, not by count.
+- Keep a type and the procedures that make up its primary API together.
+- Watch out for import cycles: Nim tolerates them poorly. If a split creates a
+  cycle, the cut is in the wrong place — record it and re-examine.
 
 ## lexicon
 
-- Procedures et variables : camelCase. Types : PascalCase. Constantes :
-  PascalCase ou SCREAMING_SNAKE selon la convention en place, rester coherent.
-- Le prefixe `is` est **autorise** sur les predicats (`isEmpty`) : idiomatique.
-  L'interdiction de `is*` est une regle ecmascript, pas universelle.
-- Bannis : `*Manager`, `*Helper`, `*Util`, `do*`, `process*`, `handle*`.
-- Pas d'abreviations.
-- Ne pas s'appuyer sur l'insensibilite au style pour laisser coexister
-  `myVar` et `my_var` : choisir une forme et l'appliquer.
+- Procedures and variables: camelCase. Types: PascalCase. Constants: PascalCase
+  or SCREAMING_SNAKE per the convention in place — stay consistent.
+- The `is` prefix is **allowed** on predicates (`isEmpty`): idiomatic. The `is*`
+  ban is an ecmascript rule, not a universal one.
+- Banned: `*Manager`, `*Helper`, `*Util`, `do*`, `process*`, `handle*`.
+- No abbreviations.
+- Do not lean on style insensitivity to let `myVar` and `my_var` coexist: pick
+  one form and apply it.
 
 ## drift
 
-- `nim check` vert sur tous les modules du scope.
-- La suite de tests passe.
-- Aucun point dans un nom de fichier `.nim`.
-- Aucun cycle d'import introduit.
-- Aucun objet agent noun reintroduit.
+- `nim check` green on every module in scope.
+- The test suite passes.
+- No dot in a `.nim` file name.
+- No import cycle introduced.
+- No agent noun object reintroduced.

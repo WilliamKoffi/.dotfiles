@@ -1,8 +1,8 @@
-# Table des familles
+# Family table
 
-Le routeur lit ce fichier pour mapper extension -> famille -> rulebook.
+The router reads this file to map extension -> family -> rulebook.
 
-| Extension    | Famille    | Rulebook                  |
+| Extension    | Family     | Rulebook                  |
 | :----------- | :--------- | :------------------------ |
 | `.js`        | ecmascript | `ecmascript.md`           |
 | `.jsx`       | ecmascript | `ecmascript.md`           |
@@ -10,14 +10,14 @@ Le routeur lit ce fichier pour mapper extension -> famille -> rulebook.
 | `.tsx`       | ecmascript | `ecmascript.md`           |
 | `.vue`       | ecmascript | `ecmascript.md`           |
 | `.php`       | php        | `php.md`                  |
-| `.blade.php` | php        | `php.md` (profil `blade`) |
+| `.blade.php` | php        | `php.md` (`blade` profile) |
 | `.rs`        | rust       | `rust.md`                 |
 | `.nim`       | nim        | `nim.md`                  |
 
-`.blade.php` doit etre teste **avant** `.php` : c'est une extension composee,
-un match naif sur `.php` la capturerait et appliquerait les mauvaises regles.
+`.blade.php` must be tested **before** `.php`: it is a compound extension, and
+a naive match on `.php` would capture it and apply the wrong rules.
 
-## Applicabilite vague x famille
+## Wave x family applicability
 
 |            | ecmascript | php | blade | rust | nim |
 | :--------- | :--------: | :-: | :---: | :--: | :-: |
@@ -26,32 +26,37 @@ un match naif sur `.php` la capturerait et appliquerait les mauvaises regles.
 | domain     | X | X | . | X | X |
 | literal    | X | . | . | . | . |
 | cruddy     | . | X | . | . | . |
+| shelved    | . | X | . | . | . |
 | affordance | X | X | . | X | X |
 | boundary   | X | . | X | . | . |
 | split      | X | X | X | X | X |
 | lexicon    | X | X | X | X | X |
 | drift      | X | X | X | X | X |
 
-`literal` n'a de section propre que dans `ecmascript.md`. Pour php, rust et
-nim, l'extraction d'ensemble ferme de valeurs se fait directement dans leur
-section `## domain` respective — voir la note en fin de chacune de ces
-sections. `blade` n'a pas de section `domain` du tout, donc pas de `literal`
-non plus.
+`literal` has a section of its own in `ecmascript.md` only. For php, rust and
+nim, extracting a closed set of values happens directly in their respective
+`## domain` section — see the note at the end of each of those sections.
+`blade` has no `domain` section at all, so no `literal` either.
 
-`cruddy` n'a de section propre que dans `php.md`. Le principe — sept actions,
-nouner le verbe — n'est pas propre a PHP, mais aucun autre rulebook ne decrit
-sa couche de routage. Ouvrir la vague a une famille supplementaire veut dire
-ecrire son `## cruddy` d'abord. `blade` est une famille de vues : elle n'a pas
-de controller, donc jamais de `cruddy`.
+`cruddy` has a section of its own in `php.md` only. The principle — seven
+actions, noun the verb — is not specific to PHP, but no other rulebook
+describes its routing layer. Opening the wave to another family means writing
+its `## cruddy` first. `blade` is a view family: it has no controller, so never
+any `cruddy`.
 
-L'absence de section `## <vague>` dans un rulebook est la source de verite.
-Cette table est un resume, pas l'autorite.
+`shelved` follows exactly the same rule as `cruddy`: a `## shelves` section in
+`php.md` only. The principle — seven methods, noun the filter — is general, but
+no other rulebook describes its data-access layer. `blade` is a view family: it
+has no repository, so never any `shelved`.
 
-## Invariants du pipeline
+The absence of a `## <wave>` section in a rulebook is the source of truth.
+This table is a summary, not the authority.
 
-Valables pour toutes les familles, toutes les vagues :
+## Pipeline invariants
 
-- `src/legacy/` est immuable. Ne pas lire, importer, ni modifier.
-- La suite de tests est verte a chaque frontiere de vague.
-- Une vague = un commit.
-- Aucune vague ne modifie un fichier hors de son scope.
+Valid for every family, every wave:
+
+- `src/legacy/` is immutable. Do not read from it, import from it, or modify it.
+- The test suite is green at every wave boundary.
+- One wave = one commit.
+- No wave modifies a file outside its scope.
