@@ -37,7 +37,7 @@ precedence decides.
 | Identifiers within the scope path | edit |
 | Call sites of any identifier renamed here | edit |
 | Filenames | read — renaming files belongs to `slice` |
-| `trash/ledger.json` | never |
+| `trash/grain/ledger.json` | never |
 
 If a name is wrong because the concept is wrong, stop. A misnamed thing that is
 also the wrong thing is `domain`'s finding, not this skill's. Report it and

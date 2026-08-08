@@ -13,7 +13,7 @@ allowed-tools: Read, Glob, Grep, Edit, Write
 Mission: **turn magic values into named members. Nothing else.**
 
 This wave fires on findings only: it has no discovery mode. `domain` decided
-*which* literals form a concept; you extract them. If `trash/ledger.json`
+*which* literals form a concept; you extract them. If `trash/grain/ledger.json`
 contains no open finding of `kind: "literal-cluster"`, you have nothing to do —
 report it and stop, without hunting for candidates yourself.
 
@@ -34,7 +34,7 @@ Report it, do not extract it.
 
 Stop and report if any of these fails:
 
-1. `trash/ledger.json` exists.
+1. `trash/grain/ledger.json` exists.
 2. It contains at least one finding with `kind: "literal-cluster"`,
    `status: "open"`.
 3. Every retained finding has a `home` that already exists on disk. If `domain`
@@ -138,7 +138,7 @@ wave will carry it as a known gap rather than a regression.
 
 ## Output
 
-Write only to `trash/ledger.json`. Emit no other report file and no new finding
+Write only to `trash/grain/ledger.json`. Emit no other report file and no new finding
 of another `kind`. The `affordance` wave reads closed `literal-cluster` findings
 to know which signatures now carry a union rather than a bare primitive.
 

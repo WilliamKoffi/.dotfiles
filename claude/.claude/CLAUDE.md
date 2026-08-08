@@ -8,7 +8,7 @@ Structural work on this machine follows the `grain` doctrine.
 Read the relevant file before any structural edit. Do not restate its rules
 inline — reference them by section number (`§1.2`, `§C4`).
 
-Pipeline: `/grain:survey <path>` first. It writes `trash/ledger.json`,
+Pipeline: `/grain:survey <path>` first. It writes `trash/grain/ledger.json`,
 which every later wave consumes. Never run a mutating wave without a ledger.
 
 Commit before any `context: fork` wave — fork-applied changes fall outside

@@ -33,7 +33,7 @@ Do not restate either file's rules here. Cite them by section — `§C4`, `§5`.
 
 ## Applicability gate — run this first
 
-1. Read `trash/ledger.json` at the repo root.
+1. Read `trash/grain/ledger.json` at the repo root.
 2. If the file does not exist, stop: *"No ledger. Run `/grain:survey` first."*
 3. If `stack` is neither `laravel` nor `php`, write `"cruddy": "skipped"` to the
    ledger and exit without reading any source file.
@@ -50,7 +50,7 @@ runs unconditionally; only this one checks.
 | Controllers named in open `cruddy` findings | edit / create |
 | `routes/*.php` | edit |
 | Call sites of routes this wave changes — views, tests, JS | edit |
-| `trash/ledger.json` | edit — `status` of `cruddy` findings only |
+| `trash/grain/ledger.json` | edit — `status` of `cruddy` findings only |
 | Domain objects, models beyond `getRouteKeyName()` | read |
 | Everything else | read |
 

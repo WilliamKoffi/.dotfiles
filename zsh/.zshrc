@@ -84,8 +84,6 @@ plugins=(
 	git
 	history
 	laravel
-	laravel-sail
-	mailpit
 	man
 	nmap
 	node

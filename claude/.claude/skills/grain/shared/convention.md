@@ -184,7 +184,7 @@ the whole change instead.
 
 ## §7. The ledger
 
-Every skill reads and writes `trash/ledger.json` at the repo root.
+Every skill reads and writes `trash/grain/ledger.json` at the repo root.
 
 `trash/` is a working directory, never committed. Add to the repo's
 `.gitignore` before the first survey:

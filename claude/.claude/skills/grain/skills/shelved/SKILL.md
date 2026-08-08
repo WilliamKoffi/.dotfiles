@@ -41,7 +41,7 @@ of a rewrite you have not performed before.
 
 Refuse and stop if any of these fail:
 
-1. `trash/ledger.json` exists. If absent → *"Run `/grain:survey <chemin>` first."*
+1. `trash/grain/ledger.json` exists. If absent → *"Run `/grain:survey <chemin>` first."*
 2. `ledger.waves.cruddy.status == "closed"` (or `"skipped"` when the stack has
    no controller layer). Controllers are shaped before the shelves they call.
    If open → *"`/grain:cruddy` is still open. Close it first."*

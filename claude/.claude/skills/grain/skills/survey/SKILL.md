@@ -11,7 +11,7 @@ allowed-tools: Read, Glob, Grep, Bash(git log *), Bash(git status *)
 # Wave 0 — survey
 
 Read-only. **You modify no code file.** The only allowed output is
-`trash/ledger.json`.
+`trash/grain/ledger.json`.
 
 ## Input
 
@@ -33,7 +33,7 @@ it**. Propose no fix.
 
 ## Output
 
-Create or update `trash/ledger.json` at the project root:
+Create or update `trash/grain/ledger.json` at the project root:
 
     {
       "scope": "<scope>",
