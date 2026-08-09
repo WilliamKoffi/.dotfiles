@@ -1,0 +1,113 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "alt+left",
+        "command": "workbench.action.navigateForward",
+        "when": "canNavigateForward"
+    },
+    {
+        "key": "alt+left",
+        "command": "workbench.action.navigateBack",
+        "when": "canNavigateBack"
+    },
+    {
+        "key": "ctrl+8",
+        "command": "-workbench.action.navigateForward",
+        "when": "canNavigateForward"
+    },
+    {
+        "key": "alt+d",
+        "command": "editor.action.duplicateSelection"
+    },
+    {
+        "key": "ctrl+shift+6",
+        "command": "-workbench.action.navigateForward",
+        "when": "canNavigateForward"
+    },
+    {
+        "key": "ctrl+[Quote]",
+        "command": "workbench.action.terminal.toggleTerminal"
+    },
+    {
+        "key": "ctrl+k 5",
+        "command": "extension.selectParenthesis",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+k shift+9",
+        "command": "-extension.selectParenthesis",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+[Period]",
+        "command": "-breadcrumbs.focus",
+        "when": "breadcrumbsPossible"
+    },
+    {
+        "key": "ctrl+[Period]",
+        "command": "editor.action.commentLine",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+shift+[Period]",
+        "command": "-editor.action.commentLine",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+k =",
+        "command": "extension.selectCurlyBrackets",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+k ctrl+alt+4",
+        "command": "-extension.selectCurlyBrackets",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+shift+alt+n",
+        "command": "namespaceResolver.generateNamespace",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+alt+g",
+        "command": "-namespaceResolver.generateNamespace",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+k 7",
+        "command": "extension.selectBackTick",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+k ctrl+alt+7",
+        "command": "-extension.selectBackTick",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+k [Minus]",
+        "command": "extension.selectSquareBrackets",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+k ctrl+alt+5",
+        "command": "-extension.selectSquareBrackets",
+        "when": "editorFocus"
+    },
+    {
+        "key": "ctrl+o",
+        "command": "workbench.action.quickOpen",
+    },
+    {
+        "key": "ctrl+p",
+        "command": "workbench.action.showCommands"
+    },
+    {
+        "key": "ctrl+j",
+        "command": "-workbench.action.togglePanel"
+    },
+        {
+        "key": "ctrl+f",
+        "command": "-workbench.action.terminal.focusFind",
+        "when": "terminalFindFocused && terminalHasBeenCreated || terminalFindFocused && terminalProcessSupported || terminalFocusInAny && terminalHasBeenCreated || terminalFocusInAny && terminalProcessSupported"
+    }
+]

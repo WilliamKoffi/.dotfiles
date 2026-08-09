@@ -1,0 +1,54 @@
+{
+    "editor.fontFamily": "FiraCode Nerd Font",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 16,
+    "editor.suggest.insertMode": "replace",
+    "editor.suggest.matchOnWordStartOnly": false,
+    "editor.renderWhitespace": "trailing",
+    "security.workspace.trust.untrustedFiles": "open",
+    "terminal.integrated.fontFamily": "FiraCode Nerd Font Mono",
+    "workbench.iconTheme": "material-icon-theme",
+    "cSpell.userWords": [
+        "autoload",
+        "dont",
+        "endloop",
+        "Laravel",
+        "Loggable",
+        "phpstan",
+        "removeable",
+        "tailwindcss"
+    ],
+    "cSpell.ignorePaths": [
+        "package-lock.json",
+        "node_modules",
+        "vscode-extension",
+        ".git/objects",
+        ".vscode",
+        ".vscode-insiders",
+        "composer.json",
+        "package.json",
+        "composer.lock",
+        "pnpm-lock.yaml"
+    ],
+    "cSpell.language": "en,fr",
+    "window.menuBarVisibility": "toggle",
+    "window.doubleClickIconToClose": true,
+    "workbench.settings.applyToAllProfiles": [
+        "errorLens.enabledDiagnosticLevels",
+        "editor.copyWithSyntaxHighlighting",
+        "window.autoDetectColorScheme",
+        "workbench.preferredDarkColorTheme",
+        "workbench.sideBar.location"
+    ],
+    "errorLens.enabledDiagnosticLevels": [
+        "error",
+        "warning"
+    ],
+    "workbench.editor.empty.hint": "hidden",
+    "editor.copyWithSyntaxHighlighting": false,
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredDarkColorTheme": "Vira Ocean High Contrast",
+    "workbench.preferredLightColorTheme": "Tokyo Night Light",
+    "workbench.sideBar.location": "right",
+}
