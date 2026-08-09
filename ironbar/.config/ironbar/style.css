@@ -1,0 +1,167 @@
+/* Rosé Pine reskin, layout/palette ported from chirpcel's ironbar config
+ * (codeberg.org/chirpcel/dotfiles, stow/mkrstn/ironbar, commits ac8d679e /
+ * 55f5db4b — via github.com/JakeStanger/ironbar/discussions/1443).
+ * Modules kept as-is (workspaces/focused/power/sysinfo/volume/tray/clock);
+ * only the visual treatment moved over — corner badges hanging off the
+ * bar, not the reference's module set (no network/bluetooth/music/
+ * notifications here, those aren't wired up on this box). The `keyboard`
+ * module was dropped: ironbar's niri backend has no KeyboardLayoutClient
+ * implementation, so it only ever rendered an empty badge. */
+
+@define-color base            #191724;
+@define-color surface         #1f1d2e;
+@define-color overlay         #26233a;
+
+@define-color muted           #6e6a86;
+@define-color subtle          #908caa;
+@define-color text            #e0def4;
+
+@define-color love            #eb6f92;
+@define-color gold            #f6c177;
+@define-color rose            #ebbcba;
+@define-color pine            #31748f;
+@define-color foam            #9ccfd8;
+@define-color iris            #c4a7e7;
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "FiraCode Nerd Font", "Roboto Mono", monospace;
+    font-weight: bold;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window.background {
+    background-color: rgba(21, 18, 27, 0);
+    color: @text;
+}
+
+tooltip {
+    background-color: @base;
+    border-radius: 10px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: @overlay;
+}
+
+/* every badge shares the base box; per-badge rules below only touch
+ * colour, rounding, and which shared borders get dropped at group edges */
+#launcher,
+#focused,
+#workspaces,
+#power,
+#sysinfo,
+#volume,
+#tray,
+#clock {
+    background-color: @base;
+    padding: 0px 10px;
+    border-left: 1px solid @overlay;
+    border-bottom: 1px solid @overlay;
+    border-right: 1px solid @overlay;
+}
+
+/* left group: launcher + focused window, attached */
+#launcher {
+    color: @text;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 10px;
+    margin-left: 10px;
+    border-right: 0px;
+}
+
+#focused {
+    color: @subtle;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 0px;
+    border-left: 0px;
+}
+
+/* center: workspaces, standalone badge */
+#workspaces {
+    color: @text;
+    border-radius: 0px 0px 10px 10px;
+    padding: 0px 2px;
+}
+
+.workspaces .item {
+    padding: 4px 6px;
+    margin: 4px 2px;
+    border-radius: 8px;
+    color: @muted;
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.workspaces .item.focused,
+.workspaces .item.active {
+    color: @base;
+    background-color: @iris;
+}
+
+.workspaces .item:hover {
+    color: @text;
+    background-color: @overlay;
+}
+
+/* right group: power + sysinfo + volume, attached */
+#power {
+    color: @iris;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 10px;
+    margin-left: 10px;
+    border-right: 0px;
+}
+
+#sysinfo {
+    color: @foam;
+    border-radius: 0px;
+    border-left: 0px;
+    border-right: 0px;
+}
+
+#volume {
+    color: @rose;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 0px;
+    border-left: 0px;
+    margin-right: 10px;
+}
+
+/* tray and clock: separate trailing badges, same treatment as the
+ * reference config's #clock */
+#tray {
+    color: @text;
+    border-radius: 0px 0px 10px 10px;
+    margin-right: 10px;
+}
+
+#clock {
+    color: @gold;
+    border-radius: 0px 0px 10px 10px;
+    margin-right: 10px;
+}
+
+/* GTK's default theme sets its own label colour that wins over `color`
+ * on the containing box — restate it explicitly (not `inherit`, GTK's
+ * CSS engine doesn't reliably resolve that) with !important so it beats
+ * the theme's own specificity. This is what was showing up white on
+ * #power/#volume/#clock. */
+#power label {
+    color: @iris !important;
+}
+#volume label {
+    color: @rose !important;
+}
+#clock label {
+    color: @gold !important;
+}

@@ -1,0 +1,28 @@
+# Ported from waybar/.config/waybar/config.ini. custom/playerctl,
+# custom/playerlabel and cava are not carried over: they were bound in the
+# waybar config but their backing binaries (playerctl, cava) were never
+# actually installed, so those three modules were already dead.
+
+position = "top"
+height = 16
+layer = "top"
+
+start = [
+    { type = "label", name = "launcher", label = "󰣚", on_click_left = "!rofi -show drun", tooltip = "Search apps" },
+    { type = "focused", name = "focused", show_icon = true, show_title = true },
+]
+
+center = [
+    { type = "workspaces", name = "workspaces", all_monitors = true, sort = "name" },
+]
+
+end = [
+    # ironbar's `keyboard` module has no niri backend (only Hyprland/Sway
+    # implement KeyboardLayoutClient) — it would render an empty badge.
+    # Dropped since only one xkb layout ("fr") is configured anyway.
+    { type = "script", name = "power", cmd = "~/.dotfiles/scripts/waybar-power.sh", mode = "poll", interval = 10000 },
+    { type = "sys_info", name = "sysinfo", format = [" {cpu_percent}%", " {memory_percent}%", " {disk_percent}%"], interval = { cpu = 5, memory = 5, disks = 20 } },
+    { type = "volume", name = "volume", format = "{icon} {percentage}%", mute_format = " Muted", icons = { volume_high = "", volume_medium = "", volume_low = "", muted = "" } },
+    { type = "tray", name = "tray", icon_size = 16 },
+    { type = "clock", name = "clock", format = "󰃅 %d/%m  %H:%M" },
+]
