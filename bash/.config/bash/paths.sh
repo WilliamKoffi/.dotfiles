@@ -30,3 +30,6 @@ export PATH="$PATH:$ANDROID_HOME/cmdline-tools/bin:$ANDROID_HOME/platform-tools"
 
 # Rust/Cargo
 export PATH="$PATH:/usr/lib/cargo/bin/:$HOME/.cargo/bin"
+
+# Composer
+export PATH="$PATH:$HOME/.config/composer/vendor/bin"
