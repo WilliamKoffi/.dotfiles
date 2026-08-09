@@ -1,0 +1,27 @@
+# Ported from hyprland/.config/hypr/hyprlock.conf's look: plain black
+# background (hyprlock.conf used rgb(000000), no image, not the desktop
+# wallpaper), centered indicator, same colour scheme. swaylock (not
+# swaylock-effects) has no clock label, so that part has no equivalent
+# here, and the indicator is a circle rather than hyprlock's pill-shaped
+# input field — closest swaylock gets is a bigger, bolder circle.
+
+color=000000
+
+indicator-radius=130
+indicator-thickness=14
+indicator-idle-visible
+
+ring-color=444444
+inside-color=111111
+line-color=000000
+text-color=dddddd
+
+ring-ver-color=444444
+inside-ver-color=111111
+text-ver-color=dddddd
+
+ring-wrong-color=bf616a
+inside-wrong-color=111111
+text-wrong-color=dddddd
+
+show-failed-attempts
