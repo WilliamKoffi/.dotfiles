@@ -1,0 +1,187 @@
+// Ported from the Hyprland-Lua config (hyprland/.config/hypr/hyprland.lua +
+// hyprland/listen.lua). Single file by design: niri KDL has no include
+// mechanism and the whole thing is short enough that the old three-file
+// split would be a fake modularization.
+
+input {
+    keyboard {
+        xkb {
+            layout "fr"
+        }
+    }
+
+    touchpad {
+        tap
+        // natural-scroll is a bare flag: presence enables it, absence
+        // disables it. Enabled here (unlike the ported Hyprland setting)
+        // per explicit request to invert scroll direction.
+        natural-scroll
+    }
+
+    focus-follows-mouse
+}
+
+output "eDP-1" {
+    mode "1920x1080@60.000"
+    position x=0 y=0
+    scale 1.0
+}
+
+layout {
+    gaps 16
+
+    default-column-width {
+        proportion 0.5
+    }
+
+    preset-column-widths {
+        proportion 0.33
+        proportion 0.5
+        proportion 0.67
+    }
+
+    border {
+        width 2
+        active-gradient from="#33ccff" to="#00ff99" angle=45
+        inactive-color "#595959aa"
+    }
+
+    shadow {
+        on
+        softness 8
+        spread 4
+        color "#1a1a1aee"
+    }
+}
+
+window-rule {
+    geometry-corner-radius 10
+    clip-to-geometry true
+}
+
+environment {
+    XCURSOR_SIZE "24"
+}
+
+spawn-at-startup "ironbar"
+// spawn-sh-at-startup (not spawn-at-startup): plain spawn execs directly
+// with no shell, so it can't expand ~ — needs the shell for that.
+spawn-sh-at-startup "swaybg -o eDP-1 -i ~/Pictures/Wallpaper/Elder-scrolls.jpg -m fill"
+spawn-at-startup "mako"
+spawn-at-startup "sh" "-c" "wl-paste --watch cliphist store"
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "swayidle" "-w" \
+    "timeout" "300" "loginctl lock-session" \
+    "timeout" "600" "niri msg action power-off-monitors" "resume" "niri msg action power-on-monitors" \
+    "before-sleep" "loginctl lock-session" \
+    "lock" "swaylock -f"
+
+window-rule {
+    match app-id="^(Code|Windsurf|dev\\.zed\\.Zed|cursor)$"
+    open-on-workspace "code"
+}
+
+window-rule {
+    match app-id="^(thunar|localsend_app)$"
+    open-floating true
+    default-column-width { fixed 800; }
+}
+
+window-rule {
+    match app-id="^(blueman-manager|org\\.telegram\\.desktop)$"
+    open-floating true
+    default-column-width { fixed 1000; }
+}
+
+binds {
+    // System / launchers
+    Mod+Return { spawn "warp-terminal"; }
+    Mod+T { spawn "rio"; }
+    Mod+E { spawn "thunar"; }
+    Mod+R { spawn "rofi" "-show" "drun"; }
+    Mod+C { spawn "brave-browser" "--new-window"; }
+    Mod+Shift+C { spawn "brave-browser" "--new-window" "--incognito"; }
+    Mod+B { spawn "google-chrome-stable" "--new-window"; }
+    Mod+V { spawn-sh "~/.local/bin/cliphist-paste.lua"; }
+    Mod+L { spawn "swaylock" "-f"; }
+
+    Mod+Q { close-window; }
+    Mod+Shift+M { quit; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+W { toggle-window-floating; }
+
+    // Focus & navigation
+    Mod+Left { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Up { focus-window-up; }
+    Mod+Down { focus-window-down; }
+    Mod+Shift+Left { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+Up { move-window-up; }
+    Mod+Shift+Down { move-window-down; }
+    Mod+Tab { focus-workspace-previous; }
+    Alt+Tab { focus-window-previous; }
+
+    // Workspaces 1-10, bound by symbol not digit. niri binds match the
+    // literal keysym a key produces, and on this AZERTY layout the
+    // unshifted top row emits symbols, not digits — confirmed via `wev`:
+    // key "1" unshifted -> ampersand, "2" -> eacute, "3" -> quotedbl,
+    // and Mod+<digit> was silently never matching (leaked to clients
+    // instead of being intercepted). Standard fr row for 1..0:
+    // & é " ' ( - è _ ç à
+    Mod+ampersand   { focus-workspace 1; }  // "1" key
+    Mod+eacute      { focus-workspace 2; }  // "2" key
+    Mod+quotedbl    { focus-workspace 3; }  // "3" key
+    Mod+apostrophe  { focus-workspace 4; }  // "4" key
+    Mod+parenleft   { focus-workspace 5; }  // "5" key
+    Mod+minus       { focus-workspace 6; }  // "6" key
+    Mod+egrave      { focus-workspace 7; }  // "7" key
+    Mod+underscore  { focus-workspace 8; }  // "8" key
+    Mod+ccedilla    { focus-workspace 9; }  // "9" key
+    Mod+agrave      { focus-workspace 10; } // "0" key
+
+    // "Move to workspace": Mod+Shift+<symbol>, not a digit modifier combo.
+    // Empirically confirmed via `wev` that niri's bind-matching keysym for
+    // a physical key is always its base/unshifted symbol, regardless of
+    // which modifiers are actually held — Mod+Shift+1..0 (digit keysyms)
+    // leaked straight through to the client unintercepted even with
+    // Shift held. So a digit keysym is never reachable as a bind trigger
+    // on this AZERTY layout, under any modifier combination; the symbol
+    // names are the only usable trigger. Shift (not Ctrl) confirmed working.
+    Mod+Shift+ampersand   { move-column-to-workspace 1; }  // "1" key
+    Mod+Shift+eacute      { move-column-to-workspace 2; }  // "2" key
+    Mod+Shift+quotedbl    { move-column-to-workspace 3; }  // "3" key
+    Mod+Shift+apostrophe  { move-column-to-workspace 4; }  // "4" key
+    Mod+Shift+parenleft   { move-column-to-workspace 5; }  // "5" key
+    Mod+Shift+minus       { move-column-to-workspace 6; }  // "6" key
+    Mod+Shift+egrave      { move-column-to-workspace 7; }  // "7" key
+    Mod+Shift+underscore  { move-column-to-workspace 8; }  // "8" key
+    Mod+Shift+ccedilla    { move-column-to-workspace 9; }  // "9" key
+    Mod+Shift+agrave      { move-column-to-workspace 10; } // "0" key
+
+    Mod+WheelScrollDown { focus-workspace-down; }
+    Mod+WheelScrollUp { focus-workspace-up; }
+
+    // Hardware controls
+    XF86AudioRaiseVolume allow-when-locked=true repeat=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume allow-when-locked=true repeat=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute allow-when-locked=true repeat=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute allow-when-locked=true repeat=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    XF86MonBrightnessUp allow-when-locked=true repeat=true { spawn "brightnessctl" "s" "10%+"; }
+    XF86MonBrightnessDown allow-when-locked=true repeat=true { spawn "brightnessctl" "s" "10%-"; }
+
+    XF86AudioNext allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPrev allow-when-locked=true { spawn "playerctl" "previous"; }
+    XF86AudioPlay allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
+
+    // Screenshots (built-in; grimblast was referenced but never installed)
+    Print { screenshot; }
+    Alt+Print { screenshot-window; }
+    Shift+Print { screenshot-screen; }
+}
+
+switch-events {
+    lid-close { spawn "swaylock" "-f"; }
+}
