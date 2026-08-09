@@ -59,3 +59,43 @@ One directory per package, mirroring `$HOME` inside it:
 ```
 ~/.dotfiles/nvim/.config/nvim/init.lua   →  stow nvim  →  ~/.config/nvim/init.lua
 ```
+
+## Termux (Android)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/WilliamKoffi/.dotfiles/main/bootstrap-termux.sh | bash
+```
+
+Installs the CLI-only subset via `pkg` and stows `bash bat claude gemini git nvim qwen vim zsh scripts`.
+Everything Wayland/X11 (`hyprland niri ironbar mako rofi rio swaylock waybar windsurf code zed`) and
+everything systemd/chroot-based (`hooks/`) is skipped — see `bootstrap-termux.sh` for the reasoning.
+
+## Wayland compositor: niri
+
+The daily driver moved from Hyprland to niri. Packages:
+
+```bash
+stow niri ironbar swaylock scripts
+```
+
+| Package | Carries |
+|---|---|
+| `niri` | `~/.config/niri/config.kdl` (single file — niri KDL has no include mechanism), `~/.config/xdg-desktop-portal/niri-portals.conf` |
+| `ironbar` | `~/.config/ironbar/{config.toml,style.css}` — replaces waybar; niri-native workspace/window modules |
+| `swaylock` | `~/.config/swaylock/config` — replaces hyprlock |
+| `scripts` | `~/.local/bin/cliphist-paste.lua` + `~/.local/lib/clipboard/*.lua` — the SUPER+V clipboard picker, retargeted from `hyprctl` to `niri msg` |
+
+Install the runtime pieces with `nix profile install nixpkgs#{niri,ironbar,xwayland-satellite,swaybg,xdg-desktop-portal-gnome,fuzzel,playerctl}`.
+Idle/lock (`swayidle`/`swaylock`) is spawned from within `niri/.config/niri/config.kdl`, not a separate service.
+
+### Reverting to Hyprland
+
+`hyprland/` and `waybar/` stay in this repo, untouched and unstowed, specifically so this is reversible:
+
+```bash
+nix profile install nixpkgs#hyprland
+sudo apt install hypridle hyprlock xdg-desktop-portal-hyprland
+stow -D niri ironbar swaylock
+stow hyprland waybar
+```
+Then recreate `/usr/local/share/wayland-sessions/hyprland.desktop` (see `hyprland/.config/hypr/` history, or `git log` on this file).
