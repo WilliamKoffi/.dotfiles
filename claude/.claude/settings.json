@@ -10,7 +10,7 @@
       "Bash(node dist/cli.js:*)"
     ]
   },
-  "model": "opus",
+  "model": "sonnet",
   "footerLinksRegexes": [],
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
