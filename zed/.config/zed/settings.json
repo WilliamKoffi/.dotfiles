@@ -7,36 +7,38 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "context_servers": {
-    "Context7": {
-      "source": "custom",
-      "enabled": true,
-      "command": "npx",
-      "args": [
-      "-y",
-      "@upstash/context7-mcp"
-    ],
-      "env": null
-    }
+  "minimap": {
+    "show": "always"
   },
-  "icon_theme": "Material Icon Theme",
+  "cli_default_open_behavior": "new_window",
+  "terminal": {
+    "font_family": "FiraCode Nerd Font Mono"
+  },
+  "base_keymap": "VSCode",
+  "buffer_font_family": "FiraCode Nerd Font",
+  "show_whitespaces": "trailing",
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
   "agent": {
-    "always_allow_tool_actions": true,
-    "inline_assistant_model": {
-      "provider": "google",
-      "model": "gemini-2.5-flash"
-    },
-    "model_parameters": [],
-    "default_model": {
-      "provider": "google",
-      "model": "gemini-2.5-flash"
-    },
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "left"
   },
   "ui_font_size": 16,
-  "buffer_font_size": 16,
+  "buffer_font_size": 16.0,
   "theme": {
     "mode": "system",
-    "light": "One Light",
-    "dark": "Tokyo Night Storm"
-  }
+    "light": "Ayu Light",
+    "dark": "Ayu Dark",
+  },
 }
