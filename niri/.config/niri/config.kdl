@@ -78,7 +78,6 @@ spawn-at-startup "swayidle" "-w" \
 
 window-rule {
     match app-id="^(Code|Windsurf|dev\\.zed\\.Zed|cursor)$"
-    open-on-workspace "code"
 }
 
 window-rule {
@@ -93,15 +92,25 @@ window-rule {
     default-column-width { fixed 1000; }
 }
 
+window-rule {
+    match app-id="^com\\.github\\.hluk\\.copyq$"
+    open-floating true
+    default-column-width { fixed 900; }
+    default-window-height { fixed 600; }
+    // No default-floating-position: niri centers a floating window when none
+    // is given. Needs CopyQ's restore_geometry=false, otherwise CopyQ asks
+    // for its last (near-fullscreen) size and wins over the fixed sizes.
+}
+
 binds {
     // System / launchers
     Mod+Return { spawn "warp-terminal"; }
     Mod+T { spawn "rio"; }
     Mod+E { spawn "thunar"; }
     Mod+R { spawn "rofi" "-show" "drun"; }
-    Mod+C { spawn "brave" "--new-window"; }
-    Mod+Shift+C { spawn "brave" "--new-window" "--incognito"; }
-    Mod+B { spawn "google-chrome-stable" "--new-window"; }
+    Mod+B { spawn "brave" "--new-window"; }
+    Mod+Shift+B { spawn "brave" "--new-window" "--incognito"; }
+    Mod+C { spawn "google-chrome-stable" "--new-window"; }
     Mod+V { spawn "copyq" "toggle"; }
     Mod+L { spawn "swaylock" "-f"; }
 
@@ -120,8 +129,18 @@ binds {
     Mod+Shift+Right { move-column-right; }
     Mod+Shift+Up { move-window-up; }
     Mod+Shift+Down { move-window-down; }
-    Mod+Tab { focus-workspace-previous; }
+    Mod+Home { focus-column-first; }
+    Mod+End { focus-column-last; }
+    Mod+Shift+Home { move-column-to-first; }
+    Mod+Shift+End { move-column-to-last; }
+    // Cycle every window of the current workspace. niri has no single "next
+    // window" action — the layout is 2D — so this walks down the current
+    // column and spills into the next column at its bottom, which visits
+    // every window in left-to-right, top-to-bottom order.
+    Mod+Tab { focus-column-right-or-first; }
+    Mod+Shift+Tab { focus-column-left-or-last; }
     Alt+Tab { focus-window-previous; }
+    Mod+Escape { focus-workspace-previous; }
 
     // Workspaces 1-10, bound by symbol not digit. niri binds match the
     // literal keysym a key produces, and on this AZERTY layout the
@@ -185,3 +204,4 @@ binds {
 switch-events {
     lid-close { spawn "swaylock" "-f"; }
 }
+
