@@ -81,9 +81,11 @@ window-rule {
 }
 
 window-rule {
-    match app-id="^(thunar|localsend_app)$"
+    match app-id="^(thunar|localsend_app|xdg-desktop-portal-gtk)$"
     open-floating true
-    default-column-width { fixed 800; }
+    default-column-width { fixed 1200; }
+    default-window-height { fixed 675; }
+    default-floating-position x=247 y=193 relative-to="top-left"
 }
 
 window-rule {
