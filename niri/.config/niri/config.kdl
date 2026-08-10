@@ -69,6 +69,7 @@ spawn-at-startup "ironbar"
 spawn-sh-at-startup "swaybg -o eDP-1 -i ~/Pictures/Wallpaper/Elder-scrolls.jpg -m fill"
 spawn-at-startup "mako"
 spawn-at-startup "sh" "-c" "wl-paste --watch cliphist store"
+spawn-at-startup "copyq"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "swayidle" "-w" \
     "timeout" "300" "loginctl lock-session" \
@@ -99,8 +100,8 @@ binds {
     Mod+T { spawn "rio"; }
     Mod+E { spawn "thunar"; }
     Mod+R { spawn "rofi" "-show" "drun"; }
-    Mod+C { spawn "brave-browser" "--new-window"; }
-    Mod+Shift+C { spawn "brave-browser" "--new-window" "--incognito"; }
+    Mod+C { spawn "brave" "--new-window"; }
+    Mod+Shift+C { spawn "brave" "--new-window" "--incognito"; }
     Mod+B { spawn "google-chrome-stable" "--new-window"; }
     Mod+V { spawn-sh "~/.local/bin/cliphist-paste.lua"; }
     Mod+L { spawn "swaylock" "-f"; }
