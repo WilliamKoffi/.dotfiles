@@ -43,7 +43,7 @@ function History.extract(selection, cache)
     if file then
         file:write(selection)
         file:close()
-        os.execute("cliphist decode < " .. target .. " | wl-copy")
+        os.execute("cliphist decode < " .. target .. " | copyq copy -")
         os.execute("sleep 0.1")
     end
 end
