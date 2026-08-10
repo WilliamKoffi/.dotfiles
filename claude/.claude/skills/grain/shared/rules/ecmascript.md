@@ -156,6 +156,20 @@ false positives.
 1. Intra-file fan-in ≥ 5 — any file, any role, leaf or not.
 2. Hosted in a leaf-role file **and** passing the structural qualifier below.
 
+**What counts as fan-in.** Every reference to the symbol inside its host file:
+direct calls, prop passes, arguments, and any binding into another structure.
+Not the declaration itself.
+
+A prop pass is not a weaker edge than a call — it is a stronger one. A symbol
+called three times in its own file is a local helper. A symbol handed to nine
+children is an interface, and an interface declared inside a leaf file is the
+definition of misplacement. Counting only direct calls inverts the evidence and
+will silently under-fire on exactly the hubs worth catching.
+
+Fan-in is counted at the host file only. Transitive call sites inside the
+children are not counted here; they are the blast radius the finding reports,
+not the trigger.
+
 **Structural qualifier** (trigger 2 only). The symbol must also do at least one
 of:
 
