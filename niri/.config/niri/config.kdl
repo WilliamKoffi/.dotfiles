@@ -68,7 +68,6 @@ spawn-at-startup "ironbar"
 // with no shell, so it can't expand ~ — needs the shell for that.
 spawn-sh-at-startup "swaybg -o eDP-1 -i ~/Pictures/Wallpaper/Elder-scrolls.jpg -m fill"
 spawn-at-startup "mako"
-spawn-at-startup "sh" "-c" "wl-paste --watch cliphist store"
 spawn-at-startup "copyq"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "swayidle" "-w" \
@@ -103,7 +102,7 @@ binds {
     Mod+C { spawn "brave" "--new-window"; }
     Mod+Shift+C { spawn "brave" "--new-window" "--incognito"; }
     Mod+B { spawn "google-chrome-stable" "--new-window"; }
-    Mod+V { spawn-sh "~/.local/bin/cliphist-paste.lua"; }
+    Mod+V { spawn "copyq" "toggle"; }
     Mod+L { spawn "swaylock" "-f"; }
 
     Mod+Q { close-window; }
