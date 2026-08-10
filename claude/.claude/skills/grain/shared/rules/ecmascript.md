@@ -153,7 +153,11 @@ false positives.
 
 **Triggers.** Either one is sufficient:
 
-1. Intra-file fan-in ≥ 5 — any file, any role, leaf or not.
+1. Intra-file fan-in ≥ 5 — any file, any role, leaf or not. The candidate must
+   be a **module-level** declaration, as enumerated by `survey` item 7: an
+   export, a plain function declaration, or a const-arrow binding. Role is not a
+   filter; scope is. A helper nested inside another function body is local by
+   construction and is never a hub, whatever its fan-in.
 2. Hosted in a leaf-role file **and** passing the structural qualifier below.
 
 **What counts as fan-in.** Every reference to the symbol inside its host file:
@@ -181,6 +185,13 @@ A pure formatting or rendering helper with high fan-in is **not** a hub. It is
 local convenience, and extracting it makes the code worse. This qualifier exists
 to stop the wave firing on every `formatLabel` in the tree.
 
+**The qualifier cannot cover trigger 1.** Its clauses are component-shaped —
+*outside its own component*, *more than one component in the file* — and do not
+translate to a module with no render boundary. Trigger 1 therefore stands
+unqualified, and the module-level scope requirement above is the only thing
+keeping it honest. A trigger-1 finding on a `.ts` module deserves a second look
+before anyone acts on it.
+
 **Owner: `split`, not `slice`.** `slice` moves and renames whole files; it
 cannot lift a function out of a body. `split` already performs exactly this
 operation. A finding of this kind that reaches `slice` is misfiled.
@@ -189,6 +200,15 @@ operation. A finding of this kind that reaches `slice` is misfiled.
 near-identical name is a `duplication` finding, not merely `hub-in-leaf`. The
 resolution is to decide which of the two survives — extracting the live copy and
 keeping both is the wrong answer.
+
+**A cluster of hubs is one finding, not many.** When several hubs in a feature
+mutate the same state, they are symptoms of one unnamed owner, not independent
+misplacements. Name the owner first — that is `domain`'s work, wave 2 — and most
+of the cluster stops being a hub, because each member becomes a method on the
+thing that holds the state. Extracting them individually at wave 6 first means
+redoing every one of them afterwards. The wave order already enforces this;
+leave such findings where they are filed and do not start at `split` because the
+`hub-in-leaf` count looks larger.
 
 ## lexicon
 
