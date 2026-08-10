@@ -107,9 +107,13 @@ No abbreviations. No acronyms except domain-standard ones (`url`, `id`, `http`).
 Underscores only where a language idiom requires them.
 
 ### 2.5 — Files
-`kebab-case.ts` for modules. `PascalCase.tsx` for components only.
 The file name is the concept it exports — `measure.ts` exports measuring, not
-`measureUtils.ts`.
+`measureUtils.ts`. That principle is the whole of this section.
+
+**The naming scheme itself belongs to the family rulebook**, in the `## slice`
+section of `rules/<family>.md`. Each family fixes its own form and its own closed
+role list; this file names no scheme and holds no role list. Per §0, a rule
+stated in two places drifts, and the rulebook is the one the waves actually read.
 
 ---
 
@@ -235,6 +239,38 @@ wave wrote; `lexicon` and `drift` skip them, because a name set by doctrine this
 run must not be re-decided in the same run. `rename_pending[]` is how a wave
 hands a legacy filename to `drift` without doing a `git mv` itself.
 
+**Emitted shape is authoritative.** The JSON above is illustrative. The field
+vocabulary a run actually uses is the one in `survey/SKILL.md`'s output block —
+`id`, `wave`, `family`, `kind`, `path`, `note`, `status`. Where the two differ,
+the emitted shape wins, and a wave must not rewrite existing entries to match
+this example.
+
+**`coverage_misses[]`.** A root-level array, sibling to `findings[]`:
+
+```json
+{
+  "symbol": "getProductById",
+  "path": "src/features/catalog/product.query.ts",
+  "extension": ".ts",
+  "wave": "affordance",
+  "kind": "missing-selector",
+  "why_missed": "survey enumerated exports only; no symbol inventory ran"
+}
+```
+
+A wave appends an entry whenever it acts on a symbol no finding covers. `drift`
+reports the total and the per-extension breakdown as a gate line.
+
+This array is the **one named exception** to the contract below: it is
+append-only by any wave, authored by whichever wave found the gap. It closes
+nothing and it opens nothing — `findings[]` remains survey-only. Without the
+exception stated here, an entry authored by `split` reads as a contract
+violation rather than as the coverage record it is.
+
+Its purpose is arithmetic. A miss noticed once is an anecdote; nine misses
+sharing an extension are a defect. Scattered across per-wave report objects they
+never add up, which is how a detector gap survives an entire pipeline run.
+
 **Contract:**
 - Only `survey` may create findings from scratch.
 - Every other skill may close, defer, or block findings **assigned to its own wave**.
@@ -280,6 +316,23 @@ waves 2–5 created mid-pipeline. That is its mission, not an exception to it.
 
 All mutating waves are `disable-model-invocation: true`. `survey` and `drift`
 are auto-invocable. Every wave declares `user-invocable: true` explicitly.
+
+## §8b. Non-wave skills
+
+These ship in `skills/` alongside the waves but sit **outside** the wave order.
+They are invoked deliberately, against a scope you name, and they touch no
+ledger finding.
+
+- `naming` — applies the family's `## slice` naming convention to one subfolder
+  without running the pipeline.
+
+A non-wave skill: opens no finding, closes none, and is never a prerequisite for
+a wave. Its absence from §8 is deliberate — the wave order is a sequence, and a
+standalone tool is not a step in it.
+
+This section exists because absence from §8 is otherwise indistinguishable from
+omission. Anything in `skills/` that is not in §8 must be listed here, or the
+next reader cannot tell a deliberate exclusion from a forgotten one.
 
 ---
 

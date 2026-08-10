@@ -2,7 +2,16 @@
 
 Extensions: `.js`, `.jsx`, `.ts`, `.tsx`, `.vue`
 
+**Extension scope.** Every wave section below opens with an `Applies to:` line.
+A section without one applies to **all** family extensions. Absence of a scope
+line is never a narrowing: a section that names no extension is not thereby
+restricted to `.ts`. This line exists because a single scoped section
+(`boundary`) once made every unscoped section read as belonging to the other
+extension, and four waves swept `.ts` only for an entire run.
+
 ## slice
+
+Applies to: all family extensions.
 
 ### Naming convention
 
@@ -61,6 +70,9 @@ resolution.
 
 ## domain
 
+Applies to: all family extensions. A `.tsx` file holds types,
+signatures and return shapes exactly as a `.ts` file does.
+
 - If several values always travel together, extract a domain name. Three or
   more correlated primitives in a signature = finding.
 - Never an anonymous return shape (`{ tone: string; text: string }[]`).
@@ -70,6 +82,8 @@ resolution.
 - A function with more than three arguments -> group them into a typed DTO.
 
 ## literal
+
+Applies to: all family extensions.
 
 - Member keys in PascalCase inside the `as const` object (`Pending`, `Paid`).
   The associated value stays the original literal, unchanged.
@@ -82,6 +96,8 @@ resolution.
 
 ## affordance
 
+Applies to: all family extensions.
+
 - Remove agent nouns: `*Manager`, `*Service`, `*Handler`, `*Broadcaster`,
   `*Sender`, `*Engine`, `*Helper`, `*Util` carrying logic.
 - Move the method to the object holding the state.
@@ -93,7 +109,9 @@ resolution.
 
 ## boundary
 
-Applies to `.tsx`, `.jsx`, `.vue`. Not to pure modules.
+Applies to: `.tsx`, `.jsx`, `.vue` only. Not to pure modules — a module with no
+render boundary has no props to compress. This is the one narrowed section in
+this rulebook; it narrows nothing but itself.
 
 - The parent holds the business state. The component holds the presentation
   state.
@@ -107,6 +125,8 @@ Applies to `.tsx`, `.jsx`, `.vue`. Not to pure modules.
 
 ## split
 
+Applies to: all family extensions.
+
 - Inspection threshold: 150 lines. It is a **trigger for review**, not an order
   to split automatically.
 - Split only on a real responsibility boundary. If the file is 180 lines of one
@@ -116,7 +136,50 @@ Applies to `.tsx`, `.jsx`, `.vue`. Not to pure modules.
 - Extract inline SVGs to `assets/`.
 - Every file created here follows the naming convention in the `slice` section.
 
+### `hub-in-leaf`
+
+A **leaf** file composes: it arranges what others supply. A symbol inside a leaf
+that supplies rather than arranges is in the wrong file, however large or small
+its host.
+
+Leaf roles — this list is literal and is **not** derivable from the recognized
+role list above, which encodes no leaf/composer property:
+
+    view tab page layout card step modal dialog drawer sheet sidebar
+
+Deliberately excluded: `list`, `table`, `timeline`, `toolbar`, `widget`. Each is
+often genuinely self-contained. On a first run, under-firing beats a wall of
+false positives.
+
+**Triggers.** Either one is sufficient:
+
+1. Intra-file fan-in ≥ 5 — any file, any role, leaf or not.
+2. Hosted in a leaf-role file **and** passing the structural qualifier below.
+
+**Structural qualifier** (trigger 2 only). The symbol must also do at least one
+of:
+
+- perform I/O — network, storage, database client
+- mutate state outside its own component
+- be called from more than one component in the file
+
+A pure formatting or rendering helper with high fan-in is **not** a hub. It is
+local convenience, and extracting it makes the code worse. This qualifier exists
+to stop the wave firing on every `formatLabel` in the tree.
+
+**Owner: `split`, not `slice`.** `slice` moves and renames whole files; it
+cannot lift a function out of a body. `split` already performs exactly this
+operation. A finding of this kind that reaches `slice` is misfiled.
+
+**Duplication check.** A live inline implementation duplicating a dead utility of
+near-identical name is a `duplication` finding, not merely `hub-in-leaf`. The
+resolution is to decide which of the two survives — extracting the live copy and
+keeping both is the wrong answer.
+
 ## lexicon
+
+Applies to: all family extensions. Identifiers inside a component file
+are in scope, not only its props.
 
 Identifier renaming only.
 
@@ -136,9 +199,12 @@ Identifier renaming only.
 
 ## drift
 
+Applies to: all family extensions.
+
 - No file off the `<entity>.<role>.<ext>` convention for a recognized role.
 - No barrel reintroduced.
 - No agent noun reintroduced.
-- Files created by `domain`, `affordance`, `boundary` and `split` are placed and
-  named per the `slice` section.
+- Files created by `domain`, `literal`, `affordance`, `boundary`, `split` and
+  `lexicon` are placed and named per the `slice` section. Every mutating wave is
+  listed here; a wave absent from this list creates files nothing checks.
 - Build green, typecheck green.
