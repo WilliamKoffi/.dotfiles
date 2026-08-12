@@ -1,0 +1,94 @@
+# nix flakes
+github:nix-community/nixGL#default
+
+# desktop / wayland (niri session)
+nixpkgs#niri
+nixpkgs#ironbar
+nixpkgs#fuzzel
+nixpkgs#swaybg
+nixpkgs#xwayland-satellite
+nixpkgs#xdg-desktop-portal-gnome
+nixpkgs#playerctl
+nixpkgs#wev
+
+# terminal / shell
+nixpkgs#warp-terminal
+nixpkgs#rio
+nixpkgs#atuin
+nixpkgs#zoxide
+nixpkgs#eza
+nixpkgs#bat
+nixpkgs#fzf
+nixpkgs#fastfetch
+nixpkgs#hyfetch
+nixpkgs#tree
+
+# dev - languages / toolchains
+nixpkgs#go
+nixpkgs#deno
+nixpkgs#nodejs_26
+nixpkgs#php85
+nixpkgs#php85Packages.composer
+nixpkgs#openjdk21
+nixpkgs#rustup
+nixpkgs#luajit
+nixpkgs#asdf-vm
+nixpkgs#uv
+nixpkgs#bun
+nixpkgs#pnpm
+
+# dev - build tools
+nixpkgs#cmake
+nixpkgs#meson
+nixpkgs#ninja
+nixpkgs#protobuf
+
+# dev - cli utilities
+nixpkgs#ripgrep
+nixpkgs#sd
+nixpkgs#rnr
+nixpkgs#jq
+nixpkgs#shellcheck
+nixpkgs#shfmt
+nixpkgs#gh
+nixpkgs#delta
+nixpkgs#ruff
+nixpkgs#mago
+nixpkgs#tlrc
+nixpkgs#nmap
+nixpkgs#lftp
+nixpkgs#axel
+nixpkgs#stow
+nixpkgs#fd
+nixpkgs#htop
+nixpkgs#xh
+
+# media
+nixpkgs#ffmpeg
+
+# editors / IDE
+nixpkgs#neovim
+nixpkgs#helix
+nixpkgs#zed-editor
+nixpkgs#antigravity-ide
+nixpkgs#opencode
+nixpkgs#crush
+
+# browsers
+nixpkgs#brave
+nixpkgs#google-chrome
+nixpkgs#microsoft-edge
+
+# communication
+nixpkgs#telegram-desktop
+nixpkgs#thunderbird
+
+# ai / ml
+nixpkgs#openai-whisper
+
+# fonts
+nixpkgs#nerd-fonts.fira-code
+
+# misc
+nixpkgs#servo
+nixpkgs#mailpit
