@@ -132,4 +132,4 @@ fi
 . "$HOME/.deno/env"
 
 # Added by Antigravity CLI installer
-export PATH="$HOME/.local/bin:$PATH"
+[[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$HOME/.local/bin:$PATH"
