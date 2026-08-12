@@ -5,7 +5,6 @@
 # Add deno completions to search path
 if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then export FPATH="$HOME/.zsh/completions:$FPATH"; fi
 
-export PATH="$HOME/.local/bin:$PATH"
 export SUDO_EDITOR=vim
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -154,6 +153,5 @@ bindkey '^E' forward-word
 # ─── Additional Sources ───────────────────────────────────────────────────────
 source "$HOME/.dotfiles/bash/.config/bash/main.sh"
 
-# Added by Antigravity CLI installer
 eval "$(undo init zsh)"
 eval "$(atuin init zsh)"
