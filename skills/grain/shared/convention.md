@@ -188,7 +188,16 @@ the whole change instead.
 
 ## §7. The ledger
 
-Every skill reads and writes `trash/grain/ledger.json` at the repo root.
+Every skill reads and writes under `trash/grain/`. The ledger is **sharded**:
+one manifest, one file per wave, plus two run-level files.
+
+```
+trash/grain/
+  ledger.json         manifest — run facts and wave status. Never findings.
+  waves/<wave>.json   findings owned by that wave.
+  plan.json           artifacts the pipeline intends to create. Advisory.
+  coverage.json       coverage_misses[]. Append-only by any wave.
+```
 
 `trash/` is a working directory, never committed. Add to the repo's
 `.gitignore` before the first survey:
@@ -201,20 +210,56 @@ A ledger that reaches a commit is a bug: it records a run, not a decision, and
 it will conflict on every branch that touches the same scope. If `trash/` is
 already tracked, `git rm -r --cached trash/` before continuing.
 
+The shape is the contract. A wave opens exactly two files — the manifest and
+its own shard — so write scope is enforced by what it holds open rather than by
+an instruction telling it to behave. Per §0, a constraint that survives only in
+prose is a constraint that drifts.
+
+### 7.1 — The manifest
+
 ```json
 {
-  "stack": "typescript-react",
-  "scope": "src/features/billing",
-  "wave": "affordance",
+  "stack": "laravel",
+  "scope": "app/Http",
+  "families": ["php"],
+  "shards": ["slice", "domain", "cruddy", "shelved", "affordance",
+             "boundary", "split", "lexicon"],
+  "waves": {
+    "survey": { "status": "closed", "findings": 42, "plan_entries": 11 },
+    "slice":  { "status": "open" },
+    "cruddy": { "status": "skipped" }
+  }
+}
+```
+
+`survey` writes the manifest whole, once. Every later wave rewrites exactly one
+key — `waves.<itself>` — and touches no other. Run facts (`stack`, `scope`,
+`families`) are stated here and nowhere else; a shard that restates `stack` is a
+second source of truth and a defect.
+
+`status` is `open` | `closed` | `skipped`. A gate that must know whether an
+earlier wave ran reads this file and stops — `shelved` checking
+`waves.cruddy.status` never opens `waves/cruddy.json`.
+
+### 7.2 — A wave shard
+
+```json
+{
+  "wave": "cruddy",
   "findings": [
     {
-      "id": "aff-004",
-      "rule": "1.2",
-      "file": "src/features/billing/charge.ts",
-      "note": "InvoiceService.send mutates Invoice",
+      "id": "F-014",
+      "rule": "C2",
+      "family": "php",
+      "kind": "route-file",
+      "path": "app/Http/Controllers/PodcastController.php",
+      "note": "subscribe/unsubscribe are custom actions",
+      "plan_id": "P-003",
       "status": "open",
       "raised_by": "survey",
-      "closed_by": null
+      "closed_by": null,
+      "source": "grain",
+      "confidence": "heuristic"
     }
   ]
 }
@@ -222,61 +267,192 @@ already tracked, `git rm -r --cached trash/` before continuing.
 
 **Status values:** `open` → `closed` | `deferred` | `blocked` | `exempt`
 
-**Optional fields.** Three, all written by the wave that closes a finding and
-read by later waves:
+**Optional fields**, written by the wave that closes a finding and read by later
+waves: `created[]` lists files the wave wrote — `lexicon` and `drift` skip them,
+because a name set by doctrine this run must not be re-decided in the same run.
+`touched[]` lists files it edited. `rename_pending[]` hands a legacy filename to
+`drift` without doing a `git mv`. `plan_id` points at the artifact in
+`plan.json` this finding is closed by building.
+
+**Cross-shard deferral.** A finding carrying `defer_to: "<wave>"` stays in the
+deferring wave's shard with `status: "deferred"`. The named wave does **not**
+act on it this run — it is the next `survey`'s input. No wave writes into
+another wave's shard under any circumstance; the single exception in this file
+is `stale` on `plan.json`, §7.3.
+
+Sharding makes this rule load-bearing rather than polite. In one flat file a
+misrouted write was merely untidy; here it is a wave reaching into a document it
+never opened.
+
+**Provenance.** Every finding carries two further fields, stating what produced
+it and how far it may be trusted:
+
+| Field | Type | Values |
+|---|---|---|
+| `source` | string | `knip` · `phpstan` · `ast-grep` · `ctags` · `grain` |
+| `confidence` | string | `proven` (tool-derived) · `heuristic` (grain inference) |
+
+A finding with `source: "grain"` MUST carry `confidence: "heuristic"`. A finding
+with any tool `source` MUST carry `confidence: "proven"` and MUST NOT be
+re-verified by a later wave — bypassing that re-verification is where the
+runtime saving comes from. A wave that re-derives a `proven` finding pays twice
+for an answer a tool already gave.
+
+`source` MUST be `grain`, or the `name` of a tool marked evidence-producing in
+`shared/capability.md` §3. The vocabulary is closed, and it is closed *there* —
+this section names no tools of its own, so there is no second list to keep in
+sync. A tool that verifies or transforms rather than asserts — a linter gate, a
+type-checker, a mutator — is not evidence-producing and never appears as a
+`source`.
+
+An extension does not earn its own token. Larastan and
+`shipmonk/dead-code-detector` arrive in one PHPStan run and are sourced
+`phpstan`; splitting them would fragment one tool's output across three tokens.
+
+**The tool must have asserted the finding, not merely supplied the bytes.**
+Knip says *this export is unused*, grain records it: `source: "knip"`,
+`confidence: "proven"`. ctags supplies symbol ranges and fan-in counts and grain
+concludes *hub-in-leaf*: `source: "grain"`, `confidence: "heuristic"` — the
+index holds no opinion about hubs. Attribute the claim to whoever made it. Get
+this backwards and a heuristic inference inherits `proven`'s exemption from
+re-verification, which is the one thing that tier exists to grant.
+
+**`source` is shared with the plan; `confidence` is not.** §7.3 gives plan
+entries a `source` too, and deliberately so: both answer *what authority stands
+behind this record*, a finding citing a tool and a plan entry citing a doctrine
+section. One concept, two domains, no ambiguity.
+
+`confidence` is finding-only. The plan's neighbouring field is
+`determination` — a different axis, named apart on purpose. See §7.3.
+
+**Emitted shape is authoritative.** The JSON above is illustrative. The field
+vocabulary a run actually uses is the one in `survey/SKILL.md`'s output block.
+Where the two differ, the emitted shape wins, and a wave must not rewrite
+existing entries to match this example.
+
+### 7.3 — `plan.json`
+
+The findings say what is wrong. The plan says what to build. This separation is
+the point: a run that exhausts its budget at wave 2 still leaves a human a
+complete, readable list of the files the pipeline was going to create.
 
 ```json
 {
-  "kind": "repository",
-  "created": ["app/Repositories/ActiveUsers.php"],
-  "rename_pending": ["app/Repositories/UserRepository.php"]
+  "plan": [
+    {
+      "id": "P-003",
+      "from": ["app/Http/Controllers/PodcastController.php@subscribe",
+               "app/Http/Controllers/PodcastController.php@unsubscribe"],
+      "rule": "C2.1",
+      "kind": "controller",
+      "path": "app/Http/Controllers/SubscriptionController.php",
+      "class": "SubscriptionController",
+      "actions": ["store", "destroy"],
+      "uri": "podcasts/{podcast}/subscriptions",
+      "route_name": "podcasts.subscriptions",
+      "determination": "mechanical",
+      "source": "crud.md §C2.1",
+      "rewritable": "unknown",
+      "stale": false
+    }
+  ]
 }
 ```
 
-`kind` names the wave a finding is addressed to when the rule prefix is not
-enough — `crud`, `repository`, `boundary`, `defect`. `created[]` lists files the
-wave wrote; `lexicon` and `drift` skip them, because a name set by doctrine this
-run must not be re-decided in the same run. `rename_pending[]` is how a wave
-hands a legacy filename to `drift` without doing a `git mv` itself.
+| Field | Holds |
+|---|---|
+| `id` | `P-` prefix, its own sequence, never reused |
+| `from[]` | the sites this artifact absorbs — `path@symbol` where a symbol is meant |
+| `kind` | `controller`, `shelf`, `model`, `migration`, `module`, `home` |
+| `path` | the file to create, repo-relative |
+| `class` | the exported symbol, where the family has one |
+| `actions[]` | the methods it will carry — the seven of `crud.md` §C1, or of `shelf.md` §S1 |
+| `uri` / `route_name` | HTTP artifacts only |
+| `determination` | `mechanical` \| `judged` |
+| `source` | the doctrine section that produced the entry |
+| `rewritable` | §C9.8 pre-evaluation, URI entries only |
+| `stale` | set by any wave that edits a path in `from[]` |
 
-**Emitted shape is authoritative.** The JSON above is illustrative. The field
-vocabulary a run actually uses is the one in `survey/SKILL.md`'s output block —
-`id`, `wave`, `family`, `kind`, `path`, `note`, `status`. Where the two differ,
-the emitted shape wins, and a wave must not rewrite existing entries to match
-this example.
+**Shape here, status there.** A plan entry carries no `status`, and a finding
+never restates a target. Duplicating either into the other is the drift §0
+forbids.
 
-**`coverage_misses[]`.** A root-level array, sibling to `findings[]`:
+**A plan entry is a proposal, not a decision.** The executing wave either adopts
+it verbatim or overrules it, recording the reason in the finding's `note`. Only
+`created[]` freezes a name (§7.5). Until then `lexicon` is free to re-decide it,
+because until then nothing was decided.
+
+**`determination`** has exactly two values. It reports how completely doctrine
+specifies the target — not how likely the entry is to be true. That is why it is
+not called `confidence`: a `judged` entry is not a weak claim, it is an
+unfinished one, carrying `null` fields and a `question` awaiting a ruling.
+Finding-level `confidence` (§7.2) is the epistemic axis and does not appear on
+plan entries.
+
+| Value | Meaning |
+|---|---|
+| `mechanical` | derivable from doctrine by rule, without judging intent — `findActiveUsers` → `ActiveUsers`, `POST /orders/store` → `/orders`, a nested pair → `{Parent}{Child}Controller` |
+| `judged` | requires a branch decision — `crud.md` §C5 A-vs-B, §C7 relation-vs-state, §C9.7 spelling. `path`, `class` and `uri` are `null`, and `question` states what must be decided |
+
+`survey` emits `mechanical` entries in full and `judged` entries as questions.
+It never guesses a branch in order to fill a field. A confidently wrong target
+is worse than an absent one: absent invites a decision, wrong invites adoption.
+
+**`rewritable`** reports `crud.md` §C9.8 and applies to URI entries only.
+`survey` may evaluate conditions 2 and 3 — the literal-URL grep and the
+external-binding test — and writes `"false"` when either fails, `"unknown"`
+otherwise. It never writes `"true"`: condition 1 belongs to the wave doing the
+rewrite.
+
+**Staleness.** A wave that edits a path listed in some entry's `from[]` sets
+`"stale": true` on that entry and writes no other field of `plan.json`. This is
+the one write any wave makes outside its own shard. An executing wave must
+re-derive a stale entry from source rather than adopt it — the target was
+computed against a file that no longer reads the way it did at wave 0.
+
+### 7.4 — `coverage.json`
 
 ```json
 {
-  "symbol": "getProductById",
-  "path": "src/features/catalog/product.query.ts",
-  "extension": ".ts",
-  "wave": "affordance",
-  "kind": "missing-selector",
-  "why_missed": "survey enumerated exports only; no symbol inventory ran"
+  "coverage_misses": [
+    {
+      "symbol": "getProductById",
+      "path": "src/features/catalog/product.query.ts",
+      "extension": ".ts",
+      "wave": "affordance",
+      "kind": "missing-selector",
+      "why_missed": "survey enumerated exports only; no symbol inventory ran"
+    }
+  ]
 }
 ```
 
 A wave appends an entry whenever it acts on a symbol no finding covers. `drift`
 reports the total and the per-extension breakdown as a gate line.
 
-This array is the **one named exception** to the contract below: it is
+This file is the **one named exception** to the contract below: it is
 append-only by any wave, authored by whichever wave found the gap. It closes
-nothing and it opens nothing — `findings[]` remains survey-only. Without the
-exception stated here, an entry authored by `split` reads as a contract
-violation rather than as the coverage record it is.
+nothing and it opens nothing — `findings[]` remains survey-only. Giving it its
+own file rather than a key inside a shard is deliberate: an entry authored by
+`split` about a gap in `affordance` belongs to neither shard.
 
 Its purpose is arithmetic. A miss noticed once is an anecdote; nine misses
 sharing an extension are a defect. Scattered across per-wave report objects they
 never add up, which is how a detector gap survives an entire pipeline run.
 
-**Contract:**
-- Only `survey` may create findings from scratch.
-- Every other skill may close, defer, or block findings **assigned to its own wave**.
-- No skill may close a finding raised for a different wave.
-- `drift` reads only; it never mutates status.
-- A skill whose wave has zero open findings writes `"<wave>": "skipped"` and exits.
+### 7.5 — Contract
+
+- Only `survey` creates findings, and only `survey` creates plan entries.
+- A wave mutates its own shard and the manifest key bearing its own name. Its
+  only write elsewhere is `stale` on `plan.json`.
+- No wave closes, edits, or reads-to-mutate a finding in another wave's shard.
+- `drift` reads every shard, the manifest, the plan and the coverage file; it
+  mutates no status.
+- A wave whose shard holds zero open findings writes `"status": "skipped"` to
+  the manifest and exits without opening a source file.
+- A wave that builds a plan entry lists the file in the closing finding's
+  `created[]`. From that moment the name is frozen against `lexicon` and
+  `drift`.
 
 ---
 
@@ -309,7 +485,9 @@ the pipeline end to end without any of them firing:
 Being skipped is a normal outcome for all three, not a failure. `drift` must not
 report a skipped wave as an unmet invariant.
 
-`survey` is read-only (`allowed-tools: Read, Glob, Grep`). `drift` is read-only
+`survey` is read-only **as to code**: it holds `Write` and `Edit` for
+`trash/grain/` alone, because §7 makes it the author of every shard and of the
+plan. `drift` is read-only
 **as to decisions** — it raises nothing and closes nothing — but it does hold
 `Edit` and `git mv`, because it is the one wave allowed to re-place files that
 waves 2–5 created mid-pipeline. That is its mission, not an exception to it.
@@ -333,6 +511,31 @@ standalone tool is not a step in it.
 This section exists because absence from §8 is otherwise indistinguishable from
 omission. Anything in `skills/` that is not in §8 must be listed here, or the
 next reader cannot tell a deliberate exclusion from a forgotten one.
+
+## §8c. Preflight skills
+
+A **preflight** runs before the wave sequence and is not a member of it.
+
+A preflight:
+
+- MUST NOT create a ledger shard
+- MUST NOT emit findings, or any record carrying `id`, `status`, `wave`, or `kind`
+- MUST NOT be listed as a predecessor in any wave's ledger gate
+- MUST write to a named advisory artifact under `trash/grain/`
+- MAY be model-invocable, since it mutates nothing outside `trash/grain/`
+
+The `absent artifact` convention is **inverted** for preflight artifacts. For
+ledger shards, absent means skip. For a preflight artifact, absent means the
+preflight has not run, and every dependent wave MUST halt. This inversion is
+permitted only because preflights sit outside the sequence; a wave may never
+carry it.
+
+A preflight is distinct from a non-wave skill (§8b): `naming` runs beside the
+pipeline and ignores the ledger, whereas a preflight runs before the pipeline
+and is a precondition of it.
+
+Current preflights: `doctor` → `trash/grain/capability.json`.
+Doctrine: `shared/capability.md`.
 
 ---
 
