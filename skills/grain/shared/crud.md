@@ -296,6 +296,13 @@ Changing a path changes observable behavior, which §5 forbids by default. The
 rewrite is permitted only when **all three** conditions hold. Any one failing →
 `deferred`, with the failing condition named in the note.
 
+`survey` pre-evaluates conditions 2 and 3 and records the result as
+`rewritable` on the plan entry (`convention.md` §7.3). `"false"` is binding —
+defer without re-testing. `"unknown"` means those two passed and condition 1 is
+untested: it is not a clearance. Survey never writes `"true"`, because
+condition 1 is a property of the rewrite, and only the wave performing it can
+know whether the route name came through byte-identical.
+
 1. **The route name survives byte-identical.** Every internal caller goes
    through `route()`, so a preserved name keeps them correct for free.
 2. **No literal URL for that path exists in the repo.** Detection command in
