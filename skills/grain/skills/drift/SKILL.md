@@ -19,7 +19,12 @@ that never met it. You do not change the convention.
 ## Allowed perimeter
 
 - conformance moves and renames on files created after wave 1
-- updating the ledger
+- the `waves.drift` key of the manifest, and `rename_pending[]` resolution
+
+You are the only wave that opens every file under `trash/grain/` — every shard,
+the manifest, `plan.json` and `coverage.json`. That breadth is the mission: the
+partition that keeps waves 1–7 honest also means nobody but you can see the run
+whole. You read all of it and mutate no finding's status.
 
 ## Frozen
 
@@ -37,10 +42,28 @@ Then check the pipeline invariants listed in `rules/families.md`:
 - one commit per wave
 - no modification outside the scope
 
+Then the ledger's own integrity, which sharding makes checkable rather than
+assumed:
+
+- every shard named in `manifest.shards` exists, and every shard on disk is
+  named in the manifest
+- no finding sits in a shard other than its owning wave's
+- every `plan_id` on a finding resolves to a plan entry, and every plan entry
+  has at least one finding pointing at it
+- every `F-` and `P-` id is unique across all shards
+- a wave whose manifest status is `"closed"` has no `open` finding left in its
+  shard
+
 ## Report
 
-- Findings closed, by wave
+- Findings closed, by shard
 - Remaining open findings, with their owning wave
+- **Plan reconciliation** — per entry: built, overruled, stale, or untouched.
+  An entry left untouched by a closed wave is the report's most useful line: it
+  is work the run intended and did not do, already written in the form a human
+  needs to finish it by hand.
+- `defer_to` findings, by target wave — these are the next `survey`'s input, not
+  this run's backlog
 - Open `kind: "defect"` findings — count, and the rule number of each
 - Written exemptions, with their justification
 - Files brought into conformance here
@@ -48,8 +71,12 @@ Then check the pipeline invariants listed in `rules/families.md`:
 
 ## Exit gate
 
-The ledger is empty, or every remaining finding carries a written and justified
-exemption. No finding stays open without a decision.
+Every shard is empty of `open` findings, or every remaining one carries a
+written and justified exemption. No finding stays open without a decision.
+
+The plan is reconciled: every entry is built, overruled with a reason, or
+reported unbuilt. An unbuilt entry does not fail the gate — a plan is a
+proposal — but an unreported one does.
 
 `kind: "defect"` is the one status that is neither closed nor exempt and still
 passes the gate: no wave is permitted to act on it (`crud.md` §C9.1, §C9.5).
