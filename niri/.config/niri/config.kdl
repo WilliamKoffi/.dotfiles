@@ -95,6 +95,13 @@ window-rule {
 }
 
 window-rule {
+    match app-id="^Thunar$" title="^Rename "
+    open-floating true
+    default-column-width { fixed 702; }
+    default-window-height { fixed 345; }
+}
+
+window-rule {
     match app-id="^(blueman-manager|org\\.telegram\\.desktop)$"
     open-floating true
     default-column-width { fixed 1000; }
