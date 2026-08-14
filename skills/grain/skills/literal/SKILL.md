@@ -13,8 +13,9 @@ allowed-tools: Read, Glob, Grep, Edit, Write
 Mission: **turn magic values into named members. Nothing else.**
 
 This wave fires on findings only: it has no discovery mode. `domain` decided
-*which* literals form a concept; you extract them. If `trash/grain/ledger.json`
-contains no open finding of `kind: "literal-cluster"`, you have nothing to do —
+*which* literals form a concept; you extract them. If
+`trash/grain/waves/literal.json` is absent or holds no open finding of
+`kind: "literal-cluster"`, you have nothing to do —
 report it and stop, without hunting for candidates yourself.
 
 You run after `domain` (wave 2) and before `affordance` (wave 4), for one reason
@@ -34,9 +35,10 @@ Report it, do not extract it.
 
 Stop and report if any of these fails:
 
-1. `trash/grain/ledger.json` exists.
-2. It contains at least one finding with `kind: "literal-cluster"`,
-   `status: "open"`.
+1. `trash/grain/ledger.json` — the manifest — exists.
+2. `trash/grain/waves/literal.json` exists and holds at least one finding with
+   `kind: "literal-cluster"`, `status: "open"`. An absent shard is the skip
+   signal: set `waves.literal.status` to `"skipped"` in the manifest and exit.
 3. Every retained finding has a `home` that already exists on disk. If `domain`
    designated a `home` it did not create, do not create it in its place: reopen
    the finding with a note `"missing home"` and move to the next one.
@@ -138,8 +140,14 @@ wave will carry it as a known gap rather than a regression.
 
 ## Output
 
-Write only to `trash/grain/ledger.json`. Emit no other report file and no new finding
-of another `kind`. The `affordance` wave reads closed `literal-cluster` findings
+Write only to `trash/grain/waves/literal.json` and the `waves.literal` key of
+the manifest — plus `stale` on any `plan.json` entry whose `from[]` you edited.
+Emit no other report file and no new finding of another `kind`.
+
+A `literal-cluster` finding whose `home` is a file that does not yet exist
+carries a `plan_id`: the plan entry names the file to create. This is the one
+case where you create a file, and it is `domain`'s designation, not your choice
+— see precondition 3. The `affordance` wave reads closed `literal-cluster` findings
 to know which signatures now carry a union rather than a bare primitive.
 
 ## Fork precaution
