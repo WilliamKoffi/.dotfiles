@@ -33,12 +33,19 @@ Do not restate either file's rules here. Cite them by section — `§C4`, `§5`.
 
 ## Applicability gate — run this first
 
-1. Read `trash/grain/ledger.json` at the repo root.
+1. Read `trash/grain/ledger.json` — the manifest, `convention.md` §7.1.
 2. If the file does not exist, stop: *"No ledger. Run `/grain:survey` first."*
-3. If `stack` is neither `laravel` nor `php`, write `"cruddy": "skipped"` to the
-   ledger and exit without reading any source file.
-4. If `stack` matches but no **open** finding carries a `rule` starting with
-   `C`, write `"cruddy": "skipped"` and exit.
+3. If `stack` is neither `laravel` nor `php`, set `waves.cruddy.status` to
+   `"skipped"` and exit without opening a shard or a source file.
+4. If `waves/cruddy.json` is absent, set `waves.cruddy.status` to `"skipped"`
+   and exit. An absent shard is the skip signal — §7 has `survey` write no shard
+   for a wave with no findings.
+5. Open `waves/cruddy.json`. If no **open** finding carries a `rule` starting
+   with `C`, set `"skipped"` and exit.
+
+You open two files at this wave's start and never a third: the manifest and your
+own shard. `waves/domain.json` is not yours to read, and a `defer_to: "cruddy"`
+sitting in it belongs to the next `survey`, not to this run.
 
 `rule` is the routing key; `wave` is derived from it. §C0 reads the rule
 prefix, so a finding carrying `wave: "cruddy"` without a `C`-prefixed `rule`
@@ -56,7 +63,10 @@ runs unconditionally; only this one checks.
 | Controllers named in open `cruddy` findings | edit / create |
 | `routes/*.php` | edit |
 | Call sites of routes this wave changes — named-route helpers in `app/`, `routes/` | edit |
-| `trash/grain/ledger.json` | edit — `status` of `cruddy` findings only |
+| `trash/grain/waves/cruddy.json` | edit — your own findings |
+| `trash/grain/ledger.json` | edit — the `waves.cruddy` key, nothing else |
+| `trash/grain/plan.json` | edit — `stale` only, on entries whose `from[]` you touched |
+| `trash/grain/waves/*.json` (any other) | never — not even to read |
 | Domain objects, models beyond `getRouteKeyName()` | read |
 | Everything else | read |
 
@@ -74,23 +84,57 @@ Any finding that would require reshaping a domain object rather than a
 controller gets `status: "deferred"` and a `defer_to: "affordance"` field. It is
 reported, never acted on.
 
+## The plan
+
+A finding carrying `plan_id` points at an entry in `trash/grain/plan.json`:
+the controller, its actions, its URI and its route name, as `survey` derived
+them. Read it before applying §C7 — for a `mechanical` entry the answer §C7
+would give you is already written down.
+
+**A plan entry is a proposal, not an instruction.** Three dispositions, and you
+record which one in the finding's `note`:
+
+| Entry state | You |
+|---|---|
+| `mechanical`, `stale: false` | adopt `path`, `class`, `actions[]`, `uri` verbatim |
+| `judged` | answer its `question` by §C5 or §C7, then fill the entry |
+| `stale: true` | re-derive from source. The target was computed against a file an earlier wave has since rewritten. |
+
+Overruling a `mechanical` entry is permitted and must be written down: the
+entry's name, yours, and the rule that forced the change. An unexplained
+divergence between plan and diff is indistinguishable from a wave that never
+read the plan.
+
+`rewritable` is `survey`'s pre-evaluation of §C9.8 conditions 2 and 3 only.
+`"false"` is binding — defer. `"unknown"` means condition 1 is still yours to
+evaluate, not that the path is clear.
+
 ## Procedure — per finding, in ID order
 
 1. Read the target controller.
-2. Apply the §C7 decision tree to the offending action.
-3. Create the resource controller §C2.1 names, if it does not yet exist.
-4. Move the action body across verbatim, renaming it to the resourceful verb.
-5. Pair the inverse where one exists — `subscribe`/`unsubscribe` become
-   `@store`/`@destroy` on one controller, not two.
-6. Update `routes/` — drop the custom route, add `Route::resource` or an
+2. Read the finding's plan entry, if it has one.
+3. Apply the §C7 decision tree to the offending action — or confirm the
+   `mechanical` entry already applies it.
+4. Create the resource controller §C2.1 names, if it does not yet exist.
+5. Move the action body across verbatim, renaming it to the resourceful verb.
+6. Pair the inverse where one exists — `subscribe`/`unsubscribe` become
+   `@store`/`@destroy` on one controller, not two. Two findings sharing a
+   `plan_id` are one controller — build it once.
+7. Update `routes/` — drop the custom route, add `Route::resource` or an
    `only([...])` subset, spelled per §C9 so `lexicon` finds nothing to fix.
-7. Update the call sites inside the write scope: named-route helpers and
+8. Update the call sites inside the write scope: named-route helpers and
    `action()` calls in `app/` and `routes/`. A call site in a view or a test is
    `blocked:out-of-scope` — record it, do not edit it.
-8. Set that finding's `status` to `closed` and write the ledger.
+9. Set that finding's `status` to `closed`, list every file you wrote in its
+   `created[]`, and write the shard.
 
-Write the ledger after every finding, never once at the end. An interrupted run
-must leave an accurate map behind.
+Write the shard after every finding, never once at the end. An interrupted run
+must leave an accurate map behind — and with the plan alongside it, an
+interrupted run leaves a human the remaining work in full.
+
+`created[]` is what freezes a name: from that write, `lexicon` and `drift` skip
+the file. A controller built from a plan entry but absent from `created[]` will
+be renamed by wave 7, undoing doctrine mid-run.
 
 ## Behavior preservation
 
