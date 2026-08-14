@@ -38,7 +38,14 @@ rules file, one required toolset. Workspaces may have many.
 | `nim` | `*.nimble` | — | `rules/nim.md` |
 
 **Exclusions.** A manifest under `vendor/`, `node_modules/`, `target/`,
-`dist/`, `.next/`, or any `.gitignore`d path is not a root.
+`dist/`, `.next/`, `trash/`, or any `.gitignore`d path is not a root. `trash/`
+matters more than the others because it is grain's own working tree: any
+manifest written there would carry a required detection signal for the table
+above. `*.nimble` is the sharpest case — it is the *sole* signal for a nim
+root, so a `.nimble` under `trash/` is one gitignore slip from grain detecting
+its own working tree as a project root and surveying itself. Grain therefore
+writes no manifest of any kind under `trash/`, and `trash/` being gitignored is
+enforced at `survey` Gate 0c rather than assumed.
 
 **Workspace members.** A Cargo workspace or an npm workspace declares members
 in its root manifest. Treat each member as its own root; treat the workspace
@@ -95,7 +102,7 @@ produce evidence, but not under a name of their own.
 
 | Tool | Floor | Waves | Severity | Ev | Purpose |
 |---|---|---|---|---|---|
-| `git` | 2.0 | all mutating | `required` | no | rollback boundary |
+| `git` | 2.0 | `survey` + all mutating | `required` | no | enumeration boundary (`survey` Gate 0d) and rollback boundary |
 | `jq` | 1.6 | all | `required` | no | shard reads without full-file loads |
 | `ctags` (universal) | 5.9 | `survey` | `required` | no | symbol index — `--fields=+ne --output-format=json` |
 | `ast-grep` | 0.20 | `literal` `domain` `cruddy` `shelved` | `preferred` | yes | structural query and rewrite |
@@ -105,6 +112,12 @@ produce evidence, but not under a name of their own.
 indexes; it makes no claim. A hub-in-leaf finding built on its ranges and
 fan-in counts is grain's assertion, sourced `grain` and `heuristic` — the
 worked example in `convention.md` §7.2.
+
+`git` is `required` for `survey`, not merely for the mutating waves. Gate 0d
+makes `git ls-files` the enumeration boundary — the thing that decides which
+files exist as far as the pipeline is concerned — so on a `survey` it is load
+bearing before a single finding is raised. A non-git workspace does not halt;
+it degrades to a Glob walk and records the degradation by name.
 
 `ctags` is `required` for `survey` alone. Without it there is no index, and
 without the index every downstream wave falls back to whole-file reads — which
@@ -176,6 +189,8 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
 ```jsonc
 {
   "generated_at": "2026-08-13T09:14:22Z",
+  "probed_scope": ".",
+  "trash_ignored": true,
 
   "manifest_mtimes": {
     "composer.json": "2026-08-11T16:02:00Z",
@@ -232,6 +247,18 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
 
 `roots[].waivers[]` holds entries of the shape
 `{ "tool": "ctags", "wave": "survey", "reason": "no nim parser" }`.
+
+**`probed_scope`** is the path `doctor` was invoked against, or `"."` when it
+was invoked bare. It exists to prevent one specific silent failure: `doctor`
+takes a `[path]`, so `/grain:doctor app` followed by `/grain:survey modules`
+leaves `survey` iterating a `roots[]` that covers nothing its scope touches —
+surveying zero roots while reporting success. `survey` Gate 0a halts when its
+scope is not covered by `probed_scope`.
+
+**`trash_ignored`** records the result of `git check-ignore -q trash`. `doctor`
+records it and reports it; it never halts on it. Enforcement is `survey`
+Gate 0c's, and the reason the fact is recorded here anyway is that a human who
+learns it at preflight fixes it before `survey` refuses rather than after.
 
 ## §5 Staleness
 

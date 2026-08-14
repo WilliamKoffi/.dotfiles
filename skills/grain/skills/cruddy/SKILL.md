@@ -33,7 +33,7 @@ Do not restate either file's rules here. Cite them by section — `§C4`, `§5`.
 
 ## Applicability gate — run this first
 
-1. Read `trash/grain/ledger.json` — the manifest, `convention.md` §7.1.
+1. Read `trash/grain/roots/<root>/ledger.json` — the manifest, `convention.md` §7.1.
 2. If the file does not exist, stop: *"No ledger. Run `/grain:survey` first."*
 3. If `stack` is neither `laravel` nor `php`, set `waves.cruddy.status` to
    `"skipped"` and exit without opening a shard or a source file.
@@ -63,10 +63,10 @@ runs unconditionally; only this one checks.
 | Controllers named in open `cruddy` findings | edit / create |
 | `routes/*.php` | edit |
 | Call sites of routes this wave changes — named-route helpers in `app/`, `routes/` | edit |
-| `trash/grain/waves/cruddy.json` | edit — your own findings |
-| `trash/grain/ledger.json` | edit — the `waves.cruddy` key, nothing else |
-| `trash/grain/plan.json` | edit — `stale` only, on entries whose `from[]` you touched |
-| `trash/grain/waves/*.json` (any other) | never — not even to read |
+| `trash/grain/roots/<root>/waves/cruddy.json` | edit — your own findings |
+| `trash/grain/roots/<root>/ledger.json` | edit — the `waves.cruddy` key, nothing else |
+| `trash/grain/roots/<root>/plan.json` | edit — `stale` only, on entries whose `from[]` you touched |
+| `trash/grain/roots/<root>/waves/*.json` (any other) | never — not even to read |
 | Domain objects, models beyond `getRouteKeyName()` | read |
 | Everything else | read |
 
@@ -86,7 +86,7 @@ reported, never acted on.
 
 ## The plan
 
-A finding carrying `plan_id` points at an entry in `trash/grain/plan.json`:
+A finding carrying `plan_id` points at an entry in `trash/grain/roots/<root>/plan.json`:
 the controller, its actions, its URI and its route name, as `survey` derived
 them. Read it before applying §C7 — for a `mechanical` entry the answer §C7
 would give you is already written down.

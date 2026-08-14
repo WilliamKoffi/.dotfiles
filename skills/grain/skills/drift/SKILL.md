@@ -5,7 +5,7 @@ argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Edit, Bash(git mv *), Bash(git status *)
+allowed-tools: Read, Glob, Grep, Edit, Bash(git mv *), Bash(git status *), Bash(git ls-files:*)
 ---
 
 # Wave 8 — drift
@@ -21,10 +21,15 @@ that never met it. You do not change the convention.
 - conformance moves and renames on files created after wave 1
 - the `waves.drift` key of the manifest, and `rename_pending[]` resolution
 
-You are the only wave that opens every file under `trash/grain/` — every shard,
-the manifest, `plan.json` and `coverage.json`. That breadth is the mission: the
-partition that keeps waves 1–7 honest also means nobody but you can see the run
-whole. You read all of it and mutate no finding's status.
+You are the only wave that opens every file under
+`trash/grain/roots/<root>/` — every shard, the manifest, `plan.json` and
+`coverage.json`. That breadth is the mission: the partition that keeps waves 1–7
+honest also means nobody but you can see the run whole. You read all of it and
+mutate no finding's status.
+
+You operate on **one root's ledger at a time** (`convention.md` §7.0). Two roots
+are two runs, reported separately; there is no cross-root reconciliation because
+there is no cross-root `F-` sequence to reconcile.
 
 ## Frozen
 
@@ -54,6 +59,13 @@ assumed:
 - a wave whose manifest status is `"closed"` has no `open` finding left in its
   shard
 
+**`blocked` is not `skipped`.** `convention.md` §8 makes a *skipped* wave a
+normal outcome you must **not** report as an unmet invariant. `blocked` is its
+opposite: the wave could not run because a `required` tool was absent, and you
+**must** report it as unmet, quoting the manifest's `reason` string and pointing
+at `trash/grain/remedy.sh`. The two statuses read as adjacent and are opposite —
+conflate them and you silence exactly the failures worth surfacing.
+
 ## Report
 
 - Findings closed, by shard
@@ -66,6 +78,7 @@ assumed:
   this run's backlog
 - Open `kind: "defect"` findings — count, and the rule number of each
 - Written exemptions, with their justification
+- Waves with status `blocked`, with their `reason` — reported as unmet
 - Files brought into conformance here
 - State of the build, the typecheck and the tests
 

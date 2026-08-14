@@ -14,7 +14,7 @@ Mission: **turn magic values into named members. Nothing else.**
 
 This wave fires on findings only: it has no discovery mode. `domain` decided
 *which* literals form a concept; you extract them. If
-`trash/grain/waves/literal.json` is absent or holds no open finding of
+`trash/grain/roots/<root>/waves/literal.json` is absent or holds no open finding of
 `kind: "literal-cluster"`, you have nothing to do —
 report it and stop, without hunting for candidates yourself.
 
@@ -35,8 +35,8 @@ Report it, do not extract it.
 
 Stop and report if any of these fails:
 
-1. `trash/grain/ledger.json` — the manifest — exists.
-2. `trash/grain/waves/literal.json` exists and holds at least one finding with
+1. `trash/grain/roots/<root>/ledger.json` — the manifest — exists.
+2. `trash/grain/roots/<root>/waves/literal.json` exists and holds at least one finding with
    `kind: "literal-cluster"`, `status: "open"`. An absent shard is the skip
    signal: set `waves.literal.status` to `"skipped"` in the manifest and exit.
 3. Every retained finding has a `home` that already exists on disk. If `domain`
@@ -140,7 +140,7 @@ wave will carry it as a known gap rather than a regression.
 
 ## Output
 
-Write only to `trash/grain/waves/literal.json` and the `waves.literal` key of
+Write only to `trash/grain/roots/<root>/waves/literal.json` and the `waves.literal` key of
 the manifest — plus `stale` on any `plan.json` entry whose `from[]` you edited.
 Emit no other report file and no new finding of another `kind`.
 

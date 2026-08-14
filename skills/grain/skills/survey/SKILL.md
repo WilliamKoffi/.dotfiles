@@ -5,18 +5,19 @@ argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git log *), Bash(git status *)
+allowed-tools: Read, Glob, Grep, Write(trash/grain/roots/**), Edit(trash/grain/roots/**), Bash(git log *), Bash(git status *), Bash(git ls-files:*), Bash(git check-ignore:*)
 ---
 
 # Wave 0 — survey
 
 Read-only **as to code**. You modify no code file. The only files you may write
-are the four under `trash/grain/` — `ledger.json`, `waves/<wave>.json`,
-`plan.json`, `coverage.json`. See `convention.md` §7.
+are the four under `trash/grain/roots/<root>/` — `ledger.json`,
+`waves/<wave>.json`, `plan.json`, `coverage.json`. See `convention.md` §7 and
+§7.0.
 
-`Write` and `Edit` are granted for that tree and no other. Without them this
-wave cannot produce its own output; the grant is the mission, not an exception
-to it.
+`Write` and `Edit` are granted for that tree and no other, enumerated rather
+than blanket. Without them this wave cannot produce its own output; the grant is
+the mission, not an exception to it.
 
 ## Gate 0
 
@@ -32,8 +33,19 @@ inline — that is doctor's remit, not survey's.
 hours, or any path in `manifest_mtimes` with a newer on-disk mtime. Report which
 condition tripped and direct the user to re-run `/grain:doctor`.
 
+**Halt if `probed_scope` does not cover `$scope`.** Report both paths and direct
+the user to re-run `/grain:doctor` against the right path. Why: iterating
+`roots[]` against an uncovered scope surveys zero roots and reports success.
+
 **Halt if any `gaps[]` entry has `severity: "required"`** and lists `survey` in
 `blocks[]`. Name the tool and point at `trash/grain/remedy.sh`.
+
+**Read *all* `required` gaps**, not only those listing `survey` in `blocks[]`.
+For each, write `"status": "blocked"` with a `reason` to that wave's manifest
+key (`convention.md` §7.1), and name every blocked wave in the run summary. This
+prevents a specific failure: a missing `tsc` blocks every mutating wave's
+post-mutation gate but not `survey`, so today the run starts, mutates through
+waves 1–5, and dies at wave 6 with the mutations already landed.
 
 **Proceed with degradation** if the only gaps blocking `survey` are `preferred`.
 Every finding in a degraded category is emitted with `source: "grain"` and
@@ -52,6 +64,42 @@ This replaces inline stack inference. You no longer read manifests to decide
 which rulebook applies — doctor already did, and the answer is in the artifact.
 A root recorded with `stack: null` and an `ambiguous` note is not surveyed;
 report it and continue with the roots that resolved.
+
+### 0c — Self-ingestion
+
+Run `git check-ignore -q trash`. Halt if it fails:
+
+> "`trash/` is not gitignored. `survey` would enumerate its own ledger as
+> source. Add `trash/` to `.gitignore`, then re-run."
+
+`convention.md` §7 states this as a prerequisite in prose, and prose is what
+fails on a fresh repo's first run: nobody adds the entry before the first
+survey, `--others` then returns `trash/grain/*.json`, and `survey` reads its own
+output as input.
+
+### 0d — Enumeration
+
+Build the file list **once**:
+
+    git ls-files --cached --others --exclude-standard -- <root>/<scope>
+
+This **replaces filesystem walking** for every subsequent step, including item 7
+and every grep. It honours nested `.gitignore`s, the global gitignore, and
+`.git/info/exclude` — none of which a hand-maintained denylist will ever track —
+and it cannot follow a symlink out of the repo. By construction it excludes
+`vendor/`, `node_modules/`, `target/`, `.next/`, and `trash/`.
+
+Three riders:
+
+- Apply `capability.md` §2's static exclusion list as a **second** filter.
+  `--cached` still lists tracked-but-now-ignored files — someone committed
+  `vendor/` before ignoring it.
+- **Not a git repo:** fall back to `Glob` plus the exclusion list, and record a
+  named degradation in the run summary. A filesystem walk is strictly weaker,
+  and the user must know which one ran.
+- **Refuse outright** when `$scope` resolves inside an excluded path. Do not
+  return an empty list. An empty survey and a refused one are indistinguishable
+  in the ledger, and only one is a mistake.
 
 ## Input
 
@@ -91,6 +139,9 @@ Rust repo pays a token cost for a plan it cannot emit.
    other module, and a function with thirteen internal call sites is a hub
    whether or not it is exported.
 
+   Pass the Gate 0d list to ctags via `ctags -L -` rather than letting ctags
+   walk the tree itself. One enumeration, one source of truth.
+
 For each problem detected, emit a finding **addressed to the wave that owns
 it**. Propose no edit.
 
@@ -100,8 +151,23 @@ write the replacement, or choose between two branches doctrine leaves open.
 
 ## Output
 
-Create or update the four files under `trash/grain/`. Write the manifest last:
-it reports counts, so it cannot be correct before the shards exist.
+One complete ledger set per root in `capability.json.roots[]`, written
+independently under `trash/grain/roots/<root>/` (`convention.md` §7.0). Write
+each manifest last: it reports counts, so it cannot be correct before the shards
+exist.
+
+**The merge rule.** Which of write-whole and update applies is decided per root,
+not left to taste:
+
+- **New root, or no existing ledger** → write whole.
+- **Existing ledger, same root, non-overlapping scope** → merge. Append to
+  `scopes[]`, allocate ids from `id_high_water`, append findings to the existing
+  shards, and re-open any wave whose shard gains an open finding.
+- **Existing ledger, overlapping scope** → **refuse**, reporting both scopes. An
+  overlap produces two ids for one violation; a wave closes one and the twin
+  stays open forever.
+- The overlap test is a normalised path-prefix check, after resolving `.` and
+  trailing slashes.
 
 **`ledger.json`** — the manifest, `convention.md` §7.1. Run facts and one
 `waves` entry per shard you wrote, each `"status": "open"`. Your own entry is
@@ -149,8 +215,12 @@ to this block, and its own examples are illustrative. A wave needing a new
 `kind` adds it here first. One invented mid-run is a `coverage_misses[]` entry,
 not a finding field.
 
-Sequential, stable identifiers, allocated across all shards from one `F-`
-sequence. Never reuse a retired id.
+Sequential, stable identifiers, allocated across all of a root's shards from one
+`F-` sequence — and `P-` likewise for the plan. Both sequences are **per-root**
+and both are allocated from `id_high_water` in that root's manifest, which
+`survey` raises before writing the manifest. Never reuse a retired id; the
+high-water mark, not the maximum id currently present, is what makes that
+enforceable across runs.
 
 ## §8. The plan
 
@@ -237,3 +307,9 @@ result; it is more often a miss.
 - No plan entry carries `"rewritable": "true"`
 - Every `plan_id` on a finding resolves, and every plan entry has at least one
   finding pointing at it
+- Every ledger path written is under `roots/<root>/` for a root present in
+  `capability.json`
+- `scopes[]` contains no overlapping pair
+- `id_high_water` is `>=` every id written this run
+- Every wave blocked by a `required` gap carries `"status": "blocked"` with a
+  `reason`

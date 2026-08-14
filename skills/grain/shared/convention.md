@@ -172,7 +172,10 @@ Consequences, binding on every skill:
   performed. Record `blocked:out-of-scope` in the ledger.
 - No behavior fixes. If a skill finds a bug, it records it and moves on. A bug
   fix is a separate commit by a human.
-- No dependency additions. No config changes.
+- No dependency additions. No config changes. This constrains the user's
+  repository, not `trash/`: anything grain builds for its own use under
+  `trash/grain/` adds no dependency to any manifest, writes no config file the
+  repo will read, and is removed by deleting one gitignored directory.
 
 ---
 
@@ -193,11 +196,33 @@ one manifest, one file per wave, plus two run-level files.
 
 ```
 trash/grain/
-  ledger.json         manifest — run facts and wave status. Never findings.
-  waves/<wave>.json   findings owned by that wave.
-  plan.json           artifacts the pipeline intends to create. Advisory.
-  coverage.json       coverage_misses[]. Append-only by any wave.
+  capability.json          preflight artifact (§8c)
+  roots/<root>/
+    ledger.json            manifest — run facts and wave status. Never findings.
+    waves/<wave>.json      findings owned by that wave.
+    plan.json              artifacts the pipeline intends to create. Advisory.
+    coverage.json          coverage_misses[]. Append-only by any wave.
 ```
+
+### 7.0 — Root keying
+
+One ledger per **root**, as detected by `doctor` (`capability.md` §2), never per
+scope argument. `<root>` is the root's `path` with `/` replaced by `-`, and `.`
+— the repo root — rendered as `root`.
+
+Root, not scope, because scope is arbitrary user input and a root is a doctrinal
+fact already computed. A Laravel repo spanning `./{app,modules,resources,routes}`
+is **one** root: one `composer.json`, one stack, one rulebook, therefore one
+ledger. Two ledgers are for `api/` + `web/` — different stacks, different
+rulebooks, no shared `F-` sequence.
+
+This is what makes §7.1's singular `stack` and `families` true again. As written
+today they are simply false in any monorepo: one manifest cannot name the stack
+of two roots. Root keying is the repair, not a new constraint.
+
+**Cross-root.** No wave reads or writes another root's ledger. The `F-` and `P-`
+sequences are per-root, and a finding never references a path outside its own
+root. Two roots are two runs that happen to share a session.
 
 `trash/` is a working directory, never committed. Add to the repo's
 `.gitignore` before the first survey:
@@ -210,8 +235,8 @@ A ledger that reaches a commit is a bug: it records a run, not a decision, and
 it will conflict on every branch that touches the same scope. If `trash/` is
 already tracked, `git rm -r --cached trash/` before continuing.
 
-The shape is the contract. A wave opens exactly two files — the manifest and
-its own shard — so write scope is enforced by what it holds open rather than by
+The shape is the contract. A wave opens exactly two files —
+`roots/<root>/ledger.json` and `roots/<root>/waves/<itself>.json` — so write scope is enforced by what it holds open rather than by
 an instruction telling it to behave. Per §0, a constraint that survives only in
 prose is a constraint that drifts.
 
@@ -219,27 +244,51 @@ prose is a constraint that drifts.
 
 ```json
 {
+  "root": "api",
   "stack": "laravel",
-  "scope": "app/Http",
+  "scopes": ["app/Http", "modules"],
   "families": ["php"],
+  "id_high_water": { "F": 42, "P": 11 },
   "shards": ["slice", "domain", "cruddy", "shelved", "affordance",
              "boundary", "split", "lexicon"],
   "waves": {
     "survey": { "status": "closed", "findings": 42, "plan_entries": 11 },
     "slice":  { "status": "open" },
-    "cruddy": { "status": "skipped" }
+    "cruddy": { "status": "skipped" },
+    "split":  { "status": "blocked", "reason": "tsc absent" }
   }
 }
 ```
 
-`survey` writes the manifest whole, once. Every later wave rewrites exactly one
-key — `waves.<itself>` — and touches no other. Run facts (`stack`, `scope`,
-`families`) are stated here and nowhere else; a shard that restates `stack` is a
-second source of truth and a defect.
+Every later wave rewrites exactly one key — `waves.<itself>` — and touches no
+other. Run facts (`root`, `stack`, `scopes`, `families`) are stated here and
+nowhere else; a shard that restates `stack` is a second source of truth and a
+defect.
 
-`status` is `open` | `closed` | `skipped`. A gate that must know whether an
-earlier wave ran reads this file and stops — `shelved` checking
+**`scopes[]` accumulates.** A second `survey` against a non-overlapping scope
+within the same root appends and merges rather than clobbering. This resolves a
+contradiction: `survey/SKILL.md` says "create or update the four files" while
+this section previously said `survey` writes the manifest whole, once. Both
+cannot hold. The merge rule governs — the whole-write case is now just the
+degenerate one where no ledger exists yet. `survey` refuses an overlapping
+scope outright rather than merging it (`survey/SKILL.md`, Output).
+
+**`id_high_water` persists the counters.** "Never reuse a retired id" was stated
+but nothing carried the number: a second survey would have to rescan every shard
+plus `plan.json` to recover the maximum. The high-water mark is authoritative
+and monotonic. `survey` raises it before writing the manifest and never lowers
+it, whatever ids were subsequently retired.
+
+`status` is `open` | `closed` | `skipped` | `blocked`. A gate that must know
+whether an earlier wave ran reads this file and stops — `shelved` checking
 `waves.cruddy.status` never opens `waves/cruddy.json`.
+
+**`blocked`** carries a sibling `reason` string. It means the wave cannot run
+because a tool marked `required` for it is absent per `capability.json.gaps[]`.
+Distinguish it sharply from `skipped`: §8 makes being skipped a normal outcome
+that `drift` must **not** report as unmet, whereas `blocked` **is** an unmet
+invariant and `drift` must report it. It is written by `survey` from
+`capability.json`, never by the blocked wave itself — that wave never runs.
 
 ### 7.2 — A wave shard
 
@@ -453,6 +502,11 @@ never add up, which is how a detector gap survives an entire pipeline run.
 - A wave that builds a plan entry lists the file in the closing finding's
   `created[]`. From that moment the name is frozen against `lexicon` and
   `drift`.
+- A wave reads and writes only under `trash/grain/roots/<its own root>/`.
+  Cross-root reads are forbidden; two roots are two runs that happen to share a
+  session.
+- A wave whose manifest status is `blocked` does not run and writes nothing.
+  `survey` set that status; the wave never opens to contest it.
 
 ---
 

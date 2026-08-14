@@ -41,7 +41,7 @@ of a rewrite you have not performed before.
 
 Refuse and stop if any of these fail:
 
-1. `trash/grain/ledger.json` — the manifest — exists. If absent → *"Run
+1. `trash/grain/roots/<root>/ledger.json` — the manifest — exists. If absent → *"Run
    `/grain:survey <chemin>` first."*
 2. `waves.cruddy.status` is `"closed"` or `"skipped"`. Controllers are shaped
    before the shelves they call. If `"open"` → *"`/grain:cruddy` is still open.
@@ -52,7 +52,7 @@ Refuse and stop if any of these fail:
    `"skipped"` and exits, which is a normal outcome, not a failure. If the stack
    has a `## shelves` section but no other rules to apply, use
    `shared/shelf.md` alone and record `stack_ruleset: none` in the wave entry.
-4. `trash/grain/waves/shelved.json` exists. If absent, the survey found nothing
+4. `trash/grain/roots/<root>/waves/shelved.json` exists. If absent, the survey found nothing
    for you: set `"skipped"` and exit.
 
 If invoked with a `[chemin]` argument, narrow to that subtree. If invoked bare,
@@ -77,7 +77,7 @@ do not create a `boundary` finding: §7 reserves creation to `survey`, and
 `grain:drift`'s job. Record every file you create in the closing finding's
 `created[]` so `grain:lexicon` and `grain:drift` skip them.
 
-**Ledger scope:** `trash/grain/waves/shelved.json` (your findings), the
+**Ledger scope:** `trash/grain/roots/<root>/waves/shelved.json` (your findings), the
 `waves.shelved` key of the manifest, and `stale` on `plan.json` entries whose
 `from[]` you edited. No other shard, not even to read.
 
@@ -88,7 +88,7 @@ do not create a `boundary` finding: §7 reserves creation to `survey`, and
 ### 0. Read the plan
 
 Every `repository` finding with a `plan_id` points at an entry in
-`trash/grain/plan.json` naming the shelf to build: its `class`, its `path`, and
+`trash/grain/roots/<root>/plan.json` naming the shelf to build: its `class`, its `path`, and
 the subset of §S1 it exposes in `actions[]`. `survey` derives these
 mechanically — `shelf.md` §S3 turns `findActiveUsers()` into `ActiveUsers` by
 rule, with no judgment to make.
