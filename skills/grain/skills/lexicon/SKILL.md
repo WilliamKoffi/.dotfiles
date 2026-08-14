@@ -25,9 +25,18 @@ rename.
 
 - absolutely everything else: paths, file names, structure, types, ownership,
   props as a surface, behavior
-- every path listed in `findings[].created[]` by `shelved`: those names were just
-  set by doctrine in this same run, and renaming them here is an undo in flight.
-  The paths in `rename_pending[]` belong to `drift`, not to you.
+- every path listed in a closed finding's `created[]`, in any shard: those names
+  were just set by doctrine in this same run, and renaming them here is an undo
+  in flight. The paths in `rename_pending[]` belong to `drift`, not to you.
+
+**A name in `plan.json` is not frozen.** The plan is `survey`'s proposal; only
+`created[]` records a decision actually taken. A plan entry whose finding is
+still `open` names a file nobody built, and if that file exists under that name
+anyway, it predates the run and is ordinary scope. Reading the plan to decide
+what to skip would freeze names on the strength of a suggestion.
+
+Read `created[]` across every shard for this — it is the one cross-shard read
+in the suite, and it is a read of decisions already taken, never of open work.
 
 ## Rules
 
