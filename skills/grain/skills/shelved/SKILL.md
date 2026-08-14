@@ -41,15 +41,19 @@ of a rewrite you have not performed before.
 
 Refuse and stop if any of these fail:
 
-1. `trash/grain/ledger.json` exists. If absent → *"Run `/grain:survey <chemin>` first."*
-2. `ledger.waves.cruddy.status == "closed"` (or `"skipped"` when the stack has
-   no controller layer). Controllers are shaped before the shelves they call.
-   If open → *"`/grain:cruddy` is still open. Close it first."*
-3. `ledger.stack` is present and its rulebook carries a `## shelves` section.
-   Today that is `php` alone — any other stack writes `"shelved": "skipped"`
-   and exits, which is a normal outcome, not a failure. If the stack has a
-   `## shelves` section but no other rules to apply, use
+1. `trash/grain/ledger.json` — the manifest — exists. If absent → *"Run
+   `/grain:survey <chemin>` first."*
+2. `waves.cruddy.status` is `"closed"` or `"skipped"`. Controllers are shaped
+   before the shelves they call. If `"open"` → *"`/grain:cruddy` is still open.
+   Close it first."* You read this from the manifest; you never open
+   `waves/cruddy.json` to find out.
+3. `stack` is present and its rulebook carries a `## shelves` section. Today
+   that is `php` alone — any other stack sets `waves.shelved.status` to
+   `"skipped"` and exits, which is a normal outcome, not a failure. If the stack
+   has a `## shelves` section but no other rules to apply, use
    `shared/shelf.md` alone and record `stack_ruleset: none` in the wave entry.
+4. `trash/grain/waves/shelved.json` exists. If absent, the survey found nothing
+   for you: set `"skipped"` and exit.
 
 If invoked with a `[chemin]` argument, narrow to that subtree. If invoked bare,
 operate on every path the ledger lists under open `repository` findings.
@@ -65,15 +69,36 @@ creates.
 **Never touches:** controllers, HTTP layer, routes, migrations, tests, views,
 domain entities. `grain:cruddy` owns the HTTP tree; `grain:domain` owns
 entities. If a rewrite here would require a controller edit, do not make it —
-open a finding of kind `boundary` and leave it for the next wave.
+leave the finding `open` with `blocked_by: "boundary"` and a one-line note. You
+do not create a `boundary` finding: §7 reserves creation to `survey`, and
+`waves/boundary.json` is not a file this wave opens.
 
 **Never renames a file.** Creating a new file is in scope; `git mv` is
-`grain:drift`'s job. Record every file you create in
-`ledger.findings[].created[]` so `grain:lexicon` and `grain:drift` skip them.
+`grain:drift`'s job. Record every file you create in the closing finding's
+`created[]` so `grain:lexicon` and `grain:drift` skip them.
+
+**Ledger scope:** `trash/grain/waves/shelved.json` (your findings), the
+`waves.shelved` key of the manifest, and `stale` on `plan.json` entries whose
+`from[]` you edited. No other shard, not even to read.
 
 ---
 
 ## Procedure
+
+### 0. Read the plan
+
+Every `repository` finding with a `plan_id` points at an entry in
+`trash/grain/plan.json` naming the shelf to build: its `class`, its `path`, and
+the subset of §S1 it exposes in `actions[]`. `survey` derives these
+mechanically — `shelf.md` §S3 turns `findActiveUsers()` into `ActiveUsers` by
+rule, with no judgment to make.
+
+Adopt a `mechanical` entry verbatim. Re-derive a `stale: true` entry from
+source. Overrule either only with the reason written into the finding's `note`.
+
+The plan is not a substitute for §2 below: it names the shelf, it does not
+classify the violation. A §S6 builder leak still stops the rewrite whatever the
+plan says the new class is called.
 
 ### 1. Inventory
 
@@ -120,9 +145,11 @@ same laziness. See `convention.md` on the legacy red line.
 
 ### 4. Close the ledger
 
-For each finding: set `status: "closed"`, list `created[]` and `touched[]`.
-Leave anything you could not close as `open` with a one-line `blocked_by`.
-Then write the wave entry:
+For each finding in `waves/shelved.json`: set `status: "closed"`, list
+`created[]` and `touched[]`. Leave anything you could not close as `open` with a
+one-line `blocked_by`. Write the shard after each finding, not once at the end.
+
+Then write your key — and only your key — into the manifest:
 
 ```json
 "shelved": {
@@ -133,6 +160,10 @@ Then write the wave entry:
   "deferred": 2
 }
 ```
+
+A `boundary` finding you open (see write scope) has nowhere to go: `survey` owns
+finding creation and `waves/boundary.json` is not yours to write. Record it in
+the blocking finding's `note` and report it. The next `survey` raises it.
 
 Never close a finding you did not actually rewrite.
 
