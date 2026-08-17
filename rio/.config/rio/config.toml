@@ -19,7 +19,7 @@
 # (windows: C:\Users\USER\AppData\Local\rio\themes\dracula.toml)
 #
 # Example:
-theme = "ayu-light"
+theme = "ayu"
 
 # Padding-x
 #
@@ -165,7 +165,7 @@ theme = "ayu-light"
 #
 [renderer]
 performance = "high"
-backend = "automatic"
+backend = "Vulkan"
 disable-unfocused-render = false
 level = 1
 filters = []
