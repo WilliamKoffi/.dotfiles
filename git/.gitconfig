@@ -5,11 +5,11 @@
 	name = 
 	email = 
 [credential "https://github.com"]
-	helper = 
-	helper = !/nix/store/7ayrbzjnm88xn12lfv99c1sqprlc2bwr-gh-2.97.0/bin/.gh-wrapped auth git-credential
+	helper =
+	helper = !gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
-	helper = !/nix/store/7ayrbzjnm88xn12lfv99c1sqprlc2bwr-gh-2.97.0/bin/.gh-wrapped auth git-credential
+	helper =
+	helper = !gh auth git-credential
 [interactive]
 	diffFilter = delta --color-only
 [delta]

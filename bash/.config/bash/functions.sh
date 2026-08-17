@@ -1,7 +1,7 @@
 . $LOG_MESSAGE_PATH
 
 todo() {
-	local todo_dir=~/lab/tmp/todos/
+	local todo_dir=~/lab/temp/todos/
 	mkdir -p "$todo_dir"
 	cd "$todo_dir" 2>/dev/null || {
 		print_message error "Failed to change directory to $todo_dir"
@@ -93,7 +93,7 @@ kebab_case() {
 nvim() {
 	folder=$(basename "$PWD")
 	echo -ne "\033]0;nvim/$folder\007"
-	/usr/bin/nvim "$@"
+	command nvim "$@"
 }
 
 function boltdiy_dev() {
