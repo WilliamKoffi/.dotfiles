@@ -15,31 +15,39 @@ return {
   },
 
   {
+    -- nvim-treesitter `main`. Parsers and queries are installed per language
+    -- into stdpath("data")/site, so a language missing from this list has no
+    -- queries at all -- unlike `master`, where every query sat on the rtp.
+    -- Run :TSInstallAll after changing it. Highlighting is started by
+    -- NvChad's FileType autocmd, so there is no `highlight` option here.
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false, -- upstream states the `main` rewrite does not support lazy-loading
+    build = ":TSUpdate",
     opts = {
       ensure_installed = {
         "vim",
         "lua",
+        "luadoc",
         "vimdoc",
+        "printf",
         "html",
         "rust",
         "css",
         "json",
+        "toml",
         "bash",
         "blade",
         "php",
         "php_only",
+        "phpdoc",
         "vue",
         "javascript",
         "typescript",
-      },
-      highlight = {
-        enable = true,
+        "comment",
+        "regex",
       },
     },
-    config = function(_, opts)
-      require "configs.treesitter"(opts)
-    end,
   },
 
   {

@@ -24,9 +24,6 @@ vim.opt.listchars = {
 vim.opt.scrolloff = 8 -- Set the number of lines to keep above and below the cursor when scrolling
 vim.opt.sidescroll = 8 -- Set the number of columns to scroll horizontally when the cursor reaches the edge of the window
 
--- must run before any plugin registers tree-sitter predicates/directives
-require "resources.ts_query_compat"
-
 local lazy_config = require "configs.lazy"
 
 -- load plugins
