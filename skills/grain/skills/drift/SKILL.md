@@ -5,7 +5,7 @@ argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Edit, Bash(git mv *), Bash(git status *), Bash(git ls-files:*)
+allowed-tools: Read, Glob, Grep, Edit, Write(trash/grain/roots/*/events.jsonl), Bash(git mv *), Bash(git status *), Bash(git ls-files:*), Bash(git log *)
 ---
 
 # Wave 8 — drift
@@ -66,6 +66,42 @@ opposite: the wave could not run because a `required` tool was absent, and you
 at `trash/grain/remedy.sh`. The two statuses read as adjacent and are opposite —
 conflate them and you silence exactly the failures worth surfacing.
 
+**A quarantined binary is not a finding.** It is a differential failure
+between two implementations of one algorithm — it is not a claim about the
+user's code, it closes nothing and opens nothing, and it must not enter
+`coverage.json`. Report it as a gate line and only a gate line.
+
+## The outcome plane
+
+You are the wave that writes `outcome` events (`observe.md` §2.2). No wave can
+observe its own reception, and you are the last one standing.
+
+For every artifact a wave in this run created or touched, determine which of
+four things happened and append one event carrying the **producing** run's id
+in `subject_run` and your own in the envelope:
+
+| `kind` | Determined by |
+|---|---|
+| `accepted` | the file exists, unmodified since the wave wrote it |
+| `edited` | it exists and its blob SHA differs from the one recorded at creation |
+| `rerun` | the same wave ran again against an overlapping scope before you did |
+| `reverted` | `git log` shows the commit undone inside `window_days` |
+
+`reverted` is the one you frequently cannot answer in this run: a revert three
+days from now is invisible today. Write it when `git log` already shows it,
+and leave the artifact unresolved otherwise — a **later** `drift` on the same
+root resolves it. Do not write `accepted` as a default for "no revert seen
+yet". That single substitution would make the outcome plane report near-total
+acceptance forever, which is both wrong and the most flattering possible
+error — the reason to name it here rather than trust it not to happen.
+
+Every event states its own `window_days` (`observe.md` §2.2). You write these
+events and you close no finding by doing it; an outcome is a fact about the
+world's response, not a decision this wave is permitted to make.
+
+**Digest every path** (`observe.md` §4). The report you print names files in
+plaintext for the human reading it; the events do not.
+
 ## Report
 
 - Findings closed, by shard
@@ -81,6 +117,21 @@ conflate them and you silence exactly the failures worth surfacing.
 - Waves with status `blocked`, with their `reason` — reported as unmet
 - Files brought into conformance here
 - State of the build, the typecheck and the tests
+- Forge gate: the engine used this run (`python` | `nim` | `none`), and
+  whether `trash/grain/forge/forge.json` records a quarantine
+- Resolver gate: the resolver per root (`capability.json.roots[].resolver`),
+  and the count of graph edges by `resolution` tier. A run whose edges are
+  wholly `heuristic` states so in one line — `observe.md` §9.3 makes that the
+  difference between a pipeline that can rename across files and one that
+  cannot, and it is invisible in every other line of this report.
+- Renames deferred `blocked:unresolved`, counted separately from
+  `blocked:out-of-scope`. The two read alike and have opposite remedies: one
+  needs a wider scope, the other needs a language server.
+- Record gate: total events by plane, and any `seq` discontinuity. A gap means
+  a wave died between incrementing and appending, and the run is missing
+  evidence exactly where it was going wrong.
+- Store gate: whether `trash/grain/store/objects/` exists. It must not
+  (`observe.md` §6). Its presence is a doctrine violation, reported as unmet.
 
 ## Exit gate
 

@@ -5,19 +5,34 @@ argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Write(trash/grain/roots/**), Edit(trash/grain/roots/**), Bash(git log *), Bash(git status *), Bash(git ls-files:*), Bash(git check-ignore:*)
+allowed-tools: Read, Glob, Grep, Write(trash/grain/roots/**), Edit(trash/grain/roots/**), Write(trash/grain/forge/**), Edit(trash/grain/forge/**), Write(trash/grain/store/**), Write(trash/grain/salt), Bash(git log *), Bash(git status *), Bash(git ls-files:*), Bash(git hash-object:*), Bash(git check-ignore:*), Bash(uv run:*), Bash(nim c:*), Bash(trash/grain/forge/bin/*:*), Bash(tree-sitter parse:*), Bash(tree-sitter query:*), Bash(rust-analyzer analysis-stats:*), Bash(phpactor references:*)
 ---
 
 # Wave 0 — survey
 
-Read-only **as to code**. You modify no code file. The only files you may write
-are the four under `trash/grain/roots/<root>/` — `ledger.json`,
-`waves/<wave>.json`, `plan.json`, `coverage.json`. See `convention.md` §7 and
-§7.0.
+Read-only **as to code**. You modify no code file. The files you may write are
+the six under `trash/grain/roots/<root>/` — `ledger.json`,
+`waves/<wave>.json`, `plan.json`, `coverage.json`, `events.jsonl`,
+`saltmap.json` — plus whatever the forge writes under `trash/grain/forge/`
+(`shared/forge.md`), the symbol graph under `trash/grain/store/graph/`
+(`observe.md` §8), and `trash/grain/salt` on first run. See `convention.md`
+§7, §7.0, §8d and §8e.
 
-`Write` and `Edit` are granted for that tree and no other, enumerated rather
-than blanket. Without them this wave cannot produce its own output; the grant is
-the mission, not an exception to it.
+`Write` and `Edit` are granted for those trees and no other, enumerated
+rather than blanket. Without them this wave cannot produce its own output, the
+forge's, or the record's; the grant is the mission, not an exception to it.
+
+`Write(trash/grain/salt)` writes once, on the first run in a workspace, and
+never again. A rewritten salt orphans every digest ever recorded
+(`observe.md` §4.1) — check for the file before writing it, and treat an
+existing salt as immovable.
+
+`Bash(trash/grain/forge/bin/*:*)` is the sharpest grant in the suite: it
+executes a binary grain itself compiled. It is safe only because
+`forge/src/` is a hash-verified copy of a static plugin asset and parameters
+arrive as JSON on stdin, never interpolated into source. If the forge ever
+generates code, this grant becomes arbitrary execution and must be
+withdrawn.
 
 ## Gate 0
 
@@ -101,6 +116,40 @@ Three riders:
   return an empty list. An empty survey and a refused one are indistinguishable
   in the ledger, and only one is a mistake.
 
+### 0e — Engines
+
+**Forge engine.** Select per the state machine in `shared/forge.md` §C, and
+hold it for the whole wave. Not restated here.
+
+**Resolver engine.** Read `capability.json.roots[].resolver` for each root.
+Do not re-probe — `doctor` decided, and the answer is in the artifact, exactly
+as with `rules_file` at Gate 0b. Hold it for the whole wave
+(`capability.md` §3, "Resolver engines").
+
+`null` is the degradation to `ctags`: every edge this wave emits is
+`resolution: "heuristic"` (`observe.md` §9.2), and the degradation is named in
+the run summary and written to the `decision` plane. It is not a halt — a
+heuristic graph is the map this pipeline has always run on.
+
+**A resolver grain cannot invoke in one shot is an absent resolver.** A wave
+is a sequence of blocking calls, not a session host. Where a language server
+offers only a stdio LSP session, there is no owner for that process's
+lifecycle inside a wave, and starting one anyway leaves an orphan when the
+wave exits early — which every gate in this file is designed to do. Use the
+one-shot surfaces (`tree-sitter query`, `rust-analyzer analysis-stats`,
+`phpactor references`) or record the resolver as absent. Holding a session is
+a forge target (`forge.md` §E) and is not licensed today.
+
+### 0f — Cache
+
+`cache: "bypass"`, hardcoded. Do not read `trash/grain/store/objects/` or
+`store/index/`, and do not create them. `observe.md` §6 states why, and §6.1
+states the three conditions that would license reading them.
+
+`store/graph/` is **not** the cache and is unaffected by this gate — it is an
+emitted artifact (`observe.md` §8), written on every run, and read by no
+step-key lookup.
+
 ## Input
 
 Rulebooks resolved in 0b. For each family present, read the sections of every
@@ -141,6 +190,33 @@ Rust repo pays a token cost for a plan it cannot emit.
 
    Pass the Gate 0d list to ctags via `ctags -L -` rather than letting ctags
    walk the tree itself. One enumeration, one source of truth.
+
+   This pass is the forge's delegation target (`forge.md` §E). When an engine
+   was selected at Gate 0e, feed it the Gate 0d file list and the ctags JSON
+   and consume its fan-in table. When none was, do the pass in-model. The
+   finding text, the hub-in-leaf judgement, and the note are grain's either
+   way — the helper supplies counts, not conclusions.
+
+   **Emit the graph.** The declarations are nodes and the call sites are
+   edges; write them to `trash/grain/store/graph/<blob-sha>.json` per
+   `observe.md` §8. Take the blob SHAs from `git ls-files -s` (`observe.md`
+   §7.1) rather than hashing files yourself.
+
+   This is a write, not a second computation. You have already derived every
+   node and every edge in this file — today they are used once and discarded,
+   which is why `observe.md` §8.1 calls this wave a producer that was throwing
+   its product away.
+
+   A file whose blob SHA already has a graph entry written under the current
+   `capability.json.fingerprint` is **not** re-parsed. That is the one place
+   this wave skips work on the basis of a stored artifact, and it is not the
+   cache Gate 0f bypasses: the key is a content hash and a fingerprint, with
+   no step key and no store index involved.
+
+   Every edge carries `resolution`, `engine`, `fingerprint` and `blob`. An
+   edge missing any of the four is malformed — `observe.md` §8.3 is what makes
+   the graph auditable, and an unprovenanced edge forces a downstream wave to
+   trust the whole graph or none of it.
 
 For each problem detected, emit a finding **addressed to the wave that owns
 it**. Propose no edit.
@@ -192,6 +268,20 @@ and an empty `findings[]` array says the same thing more expensively.
 
 **`coverage.json`** — `{ "coverage_misses": [] }`. You create it empty; later
 waves append.
+
+**`events.jsonl`** — the record, `observe.md` §2. Append as you go, never at
+the end. A wave that halts at Gate 0a has produced the single most valuable
+event in the file, and batching the writes until the ledger is ready loses
+exactly the runs worth explaining.
+
+Emit, at minimum: every gate outcome including the ones that passed, every
+degradation named in the run summary, the two engine selections from Gate 0e,
+the merge-rule branch taken below, and one `trace` event per step with its
+duration. Digest every path and symbol (`observe.md` §4) — the run summary is
+plaintext for the human in front of you, the record is not.
+
+**`saltmap.json`** — digest → plaintext, for every digest you wrote this run.
+Local only, and it never leaves the machine (`observe.md` §4, §11).
 
 A finding may carry extra fields specific to its owning wave — for example
 `kind: "literal-cluster"`, opened by `domain` for the `literal` wave (see
@@ -313,3 +403,11 @@ result; it is more often a miss.
 - `id_high_water` is `>=` every id written this run
 - Every wave blocked by a `required` gap carries `"status": "blocked"` with a
   `reason`
+- `events.jsonl` holds an event for every gate outcome, and its `seq` values
+  are contiguous from 0
+- No event, no graph entry and no store object holds a plaintext path, symbol
+  or source fragment
+- Every graph edge carries `resolution`, `engine`, `fingerprint` and `blob`
+- `trash/grain/store/objects/` and `store/index/` were not created
+  (`observe.md` §6)
+- No network call was made (`observe.md` §11)

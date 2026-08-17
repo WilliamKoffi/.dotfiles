@@ -39,13 +39,15 @@ rules file, one required toolset. Workspaces may have many.
 
 **Exclusions.** A manifest under `vendor/`, `node_modules/`, `target/`,
 `dist/`, `.next/`, `trash/`, or any `.gitignore`d path is not a root. `trash/`
-matters more than the others because it is grain's own working tree: any
-manifest written there would carry a required detection signal for the table
-above. `*.nimble` is the sharpest case — it is the *sole* signal for a nim
-root, so a `.nimble` under `trash/` is one gitignore slip from grain detecting
-its own working tree as a project root and surveying itself. Grain therefore
-writes no manifest of any kind under `trash/`, and `trash/` being gitignored is
-enforced at `survey` Gate 0c rather than assumed.
+matters more than the others because grain's own forge tree lives under
+`trash/grain/forge/` (`convention.md` §8d), and if the forge ever wrote a
+manifest, that
+manifest would carry a required detection signal for the table above.
+`*.nimble` is the sharpest case — it is the *sole* signal for a nim root, so a
+`.nimble` under `trash/grain/forge/` is one gitignore slip from grain
+detecting its own accelerator as a project root and surveying itself. The
+forge therefore writes no manifest of any kind, and `trash/` being gitignored
+is enforced at `survey` Gate 0c rather than assumed.
 
 **Workspace members.** A Cargo workspace or an npm workspace declares members
 in its root manifest. Treat each member as its own root; treat the workspace
@@ -123,6 +125,94 @@ it degrades to a Glob walk and records the degradation by name.
 without the index every downstream wave falls back to whole-file reads — which
 is the condition this whole tooling layer exists to eliminate.
 
+### Meta toolchain
+
+| Tool | Floor | Waves | Severity | Ev | Purpose |
+|---|---|---|---|---|---|
+| `uv` | 0.5 | `survey` | `optional` | no | pins the forge interpreter; PEP 723 launcher |
+| `nim` | 2.0 | `survey` | `optional` | no | compiles the forge accelerator |
+| `nimble` | 0.14 | `survey` | `optional` | no | evidence of a complete Nim install |
+| `lmdb` (headers + static archive) | 0.9.29 | `survey` | `optional` | no | build-time only; the KV of `observe.md` §7.5 |
+
+This table is orthogonal to root stack. `nim` appears here for a Laravel root
+and a Next.js root alike, because the accelerator is stack-agnostic by
+construction (`forge.md` §B). Every other table in this section is keyed to a
+root's stack; this one is keyed to grain itself. A reader will otherwise try
+to file these rows under a stack — they don't belong to one.
+
+Every row is `optional` and MUST remain so. Escalating any of them to
+`preferred` or `required` would make an accelerator a precondition, which §8d
+forbids. The forge can make a run faster; it must never make a run possible
+that wasn't.
+
+`nimble` is probed but never invoked. The forge has zero dependencies and
+writes no `.nimble` manifest (§2). Its presence is read as evidence of a
+complete Nim toolchain, nothing more.
+
+**`lmdb` is a build-time row and probing it means probing for `lmdb.h` and
+`liblmdb.a`, not for a binary on `$PATH`.** `mdb_stat` being present proves
+nothing — grain never runs it. Package managers that split outputs put the
+header and the archive in a development output that a plain profile install
+does not pull in, so the probe is a file test at the resolved prefix and a
+`command -v` result is not a substitute.
+
+It is `optional` and must stay so, like every row in this table. Its absence
+means the compiled engine uses the filesystem CAS, which is what it does
+today regardless — `observe.md` §7.6 has not licensed the KV, and this row
+exists so that `doctor` can report the fact rather than so that anything acts
+on it.
+
+`ruff`, `ty`, and `mypy` are deliberately absent from this table and from
+every table in this section. They belong to grain's own CI, not to a user's
+machine. Say this explicitly, because otherwise the next reader adds them, and
+three tools get probed on every run to validate source that shipped
+pre-checked.
+
+`nim` appears twice in this section — as `required` for nim roots, and as
+`optional` here. That is not a duplicate: one asks whether the ROOT can be
+surveyed, the other whether the ACCELERATOR can be built. A workspace can have
+the second without the first.
+
+### Resolver engines
+
+The engines that decide whether a symbol-graph edge is `resolved` or
+`heuristic` (`observe.md` §9.2). Probed per family, on `survey` only.
+
+| Tool | Family | Floor | Severity | Ev | Produces |
+|---|---|---|---|---|---|
+| `typescript-language-server` | ecmascript | 4.0 | `preferred` | no | `resolved` edges, all kinds |
+| `intelephense` *or* `phpactor lsp` | php | any | `preferred` | no | `resolved` edges, all kinds |
+| `rust-analyzer` | rust | any | `preferred` | no | `resolved` edges, all kinds |
+| `nimlangserver` | nim | any | `preferred` | no | `resolved` edges, all kinds |
+| `tree-sitter` | all | 0.22 | `preferred` | no | `resolved` intra-file, `heuristic` cross-file |
+
+**`preferred`, not `required`, and it looks wrong.** `observe.md` §9.3 defers
+any cross-file rename whose call-site set contains a heuristic edge, so a
+missing language server visibly stops work — which reads like a `required`
+tool. It is not. `required` means *the wave refuses*; here the wave runs,
+produces its findings, and defers a subset with a written reason. That is the
+definition of `preferred`, and promoting it would refuse a survey that has
+useful output to give.
+
+**Ev is `no` on every row, including the language servers.** A resolver
+resolves; it does not conclude. `rust-analyzer` says *these are the call
+sites*, and grain says *this is a hub in a leaf* — the same relation `ctags`
+stands in, and the same ruling (`convention.md` §7.2). The extra strength of a
+resolved answer is carried by `resolution` on the edge, which is a third axis
+for precisely this reason (`observe.md` §9.1). It never leaks into a finding's
+`confidence`, and no language server ever appears as a `source`.
+
+**One engine per family per run**, selected at `survey` Gate 0e and held for
+the whole wave, exactly as the forge engine is (`forge.md` §C). A graph whose
+edges came from two resolvers has no single `engine` value to record, and
+`observe.md` §8.3 requires one.
+
+`phpactor` appears twice in this section — as `preferred` for `lexicon` under
+PHP roots, and here. Not a duplicate: `lexicon` invokes its **mutation** CLI
+and is forbidden to analyze with it (see the PHP table's third ruling), while
+this row invokes its **language-server** mode and never mutates. Same binary,
+two disjoint surfaces, and the PHP-table prohibition still stands.
+
 ### ECMAScript roots
 
 | Tool | Floor | Waves | Severity | Ev |
@@ -191,6 +281,14 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
   "generated_at": "2026-08-13T09:14:22Z",
   "probed_scope": ".",
   "trash_ignored": true,
+  "fingerprint": "4b1d9e0c77a2f3518ac6d240be95713f",
+
+  "meta": {
+    "uv": { "present": true, "version": "0.5.11" },
+    "nim": { "present": true, "version": "2.2.6" },
+    "nimble": { "present": true, "version": "0.16.4" },
+    "python": { "resolved": "3.13.1", "via": "uv" }
+  },
 
   "manifest_mtimes": {
     "composer.json": "2026-08-11T16:02:00Z",
@@ -203,6 +301,7 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
       "stack": "laravel",
       "rules_file": "rules/php.md",
       "detected_by": ["composer.json", "artisan"],
+      "resolver": "intelephense",
       "waivers": []
     },
     {
@@ -210,6 +309,7 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
       "stack": "nextjs",
       "rules_file": "rules/ecmascript.md",
       "detected_by": ["package.json", "next.config.mjs"],
+      "resolver": null,
       "waivers": []
     }
   ],
@@ -221,7 +321,8 @@ so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
       "version": "6.1.0",
       "floor": "5.9",
       "below_floor": false,
-      "satisfies": ["survey"]
+      "satisfies": ["survey"],
+      "binary_hash": "7d1a0c8e5b62f4930ac7d1e04b8f2653"
     },
     {
       "name": "knip",
@@ -260,6 +361,24 @@ records it and reports it; it never halts on it. Enforcement is `survey`
 Gate 0c's, and the reason the fact is recorded here anyway is that a human who
 learns it at preflight fixes it before `survey` refuses rather than after.
 
+**`meta`** records the forge toolchain (§3 "Meta toolchain"). `python.resolved`
+is the version `uv` selected, `python.via` is `uv` or `null`. Never record a
+bare `python3` path — B1 makes `uv` the only interpreter provenance grain will
+trust.
+
+**`fingerprint`** is the capability fingerprint, §8. It is derived from the
+rest of this file and is written last.
+
+**`roots[].resolver`** names the engine selected for that root's family from
+the "Resolver engines" table, or `null` when none was found. `survey` Gate 0e
+reads it rather than re-probing; `null` is the degradation to `ctags`
+(`observe.md` §9.2) and is reported by name.
+
+**`tools[].binary_hash`** is present only for a tool grain **executes
+directly** and omitted for every other row. It is a content hash of the
+resolved binary, and §8.2 states why a version string alone is not enough for
+these.
+
 ## §5 Staleness
 
 `capability.json` is a session artifact. `survey` Gate 0 treats it as stale,
@@ -281,3 +400,77 @@ behaviour and the whole matrix reduces to a binary.
 
 **`doctor` cannot ship before the ledger provenance amendment lands.** Sequence
 the two changes accordingly.
+
+## §7 Dependency on the forge
+
+The `meta` table and `probed_scope` are inert without `shared/forge.md` and
+the §8d amendment to `convention.md`. `doctor` must not probe for `uv` or
+`nim` before there is a documented accelerator class for them to serve — a
+probe that records a capability nothing consumes is noise in an artifact
+whose whole value is that every key is load-bearing.
+
+Sequence: `convention.md` §8d, then `shared/forge.md`, then this table.
+
+## §8 The capability fingerprint
+
+`doctor` computes `fingerprint` last, after `tools[]`, `meta` and `roots[]`
+are written, and it is a pure function of them:
+
+    fingerprint = blake2b_128 over the sorted, length-prefixed list of
+      "<name>=<version>"        for every probed tool, present or absent
+      "<name>@<binary_hash>"    for every tool grain executes directly
+
+Doctrine for what consumes it is `observe.md` §5 and §7.2. This section states
+only what `doctor` must put in it.
+
+### 8.1 — Absent tools are in the fingerprint too
+
+An absent tool is recorded as `"<name>="` with an empty version. Installing
+`ast-grep` must change the fingerprint, because a run with it and a run
+without it produce different findings from the same source — and if those two
+runs share a key, the cache serves one repo's answer to the other's question.
+
+Omitting absent tools would make the fingerprint a function of what happened
+to be installed rather than of the environment, which is the same defect §8.2
+describes in a smaller costume.
+
+### 8.2 — Versions, never presence
+
+The fingerprint hashes version strings, and it hashes the binary itself for
+anything grain executes directly.
+
+A presence-only fingerprint — `{ctags: true, ast-grep: true}` — is stable
+across a `ctags` 6.0 → 6.2 upgrade that changes emitted fields. Every artifact
+cached under it is now wrong, is still served, and nothing reports a problem:
+the cache is doing exactly what it was told. That failure produces incorrect
+output that looks like fast output, on the one machine where the upgrade
+happened, and it is the reason this section exists.
+
+`binary_hash` covers the case a version string cannot: two builds of the same
+advertised version, from different patches or different distributions. It is
+recorded only for tools grain executes directly, because for everything else
+the version is what the tool reports about itself and grain has no cheaper
+handle on it.
+
+**Record the resolved path alongside the hash.** `command -v` gives the path;
+hash what it points at, not the name. On a content-addressed store the path is
+*itself* a hash over source, patches, compiler and build inputs — strictly
+stronger than anything §8.2 asks for, obtained for free.
+
+That is a happy accident and never a dependency. `doctor` does not detect
+which package manager produced a path and has no branch for one; it resolves,
+hashes a regular file, and records both. A workspace on such a store gets a
+better fingerprint without grain knowing it happened, which is the only way a
+tool that must run anywhere is allowed to benefit from a tool that does not.
+
+### 8.3 — It is computed on every invocation, like everything else here
+
+`doctor` never caches (see "Never caches" in `doctor/SKILL.md`), and the
+fingerprint inherits that. It is twenty hashes over strings already in memory
+plus a content hash of at most a handful of binaries.
+
+### 8.4 — A fingerprint change invalidates; it never migrates
+
+There is no fingerprint-migration path and there will not be one. The store is
+dropped. `observe.md` §7.4 states the ruling and its justification; it is not
+repeated here.

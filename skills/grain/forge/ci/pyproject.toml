@@ -1,0 +1,37 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  # D203 (incorrect-blank-line-before-class) conflicts with D211
+  # (no-blank-line-before-class); we follow D211 -- no blank line before a
+  # class docstring.
+  "D203",
+  # D213 (multi-line-summary-second-line) conflicts with D212
+  # (multi-line-summary-first-line); we follow D212 -- summary starts on
+  # the opening quotes' line.
+  "D213",
+  # COM812 (missing-trailing-comma) conflicts with the formatter; ruff's
+  # own docs recommend disabling it whenever the formatter also runs.
+  "COM812",
+  # CPY001 (missing-copyright-notice) -- no repo-wide license header
+  # convention exists; this is a personal plugin, not a distribution that
+  # requires a per-file notice.
+  "CPY001",
+]
+# ANN, BLE, TRY, and S stay enabled deliberately: they are the rules doing
+# the real work for this file's goals -- full annotations at the parse
+# boundary and nowhere looser, no bare/blind except clauses, structured
+# exception messages, and no shell-out or eval-shaped foot-guns in a
+# script that is itself executed as untrusted-adjacent input handling.
+# PTH stays on too, for whatever path handling forge helpers grow.
+
+[dependency-groups]
+# ty is pinned EXACTLY, not with a compatible-release operator. On a
+# 0.0.x line, where the diagnostics themselves are not yet a stable API,
+# a patch bump can turn a green gate red with no code change of our own,
+# and the failure would read as a regression in the script rather than a
+# change in the checker. Bump it deliberately, as its own commit.
+dev = ["ruff>=0.9", "ty==0.0.71"]

@@ -170,6 +170,11 @@ Consequences, binding on every skill:
 - Renames of **exported** symbols require updating all call sites in the same pass.
 - If a call site lives outside the argument path, the rename is **deferred**, not
   performed. Record `blocked:out-of-scope` in the ledger.
+- If the **set** of call sites is not known to be complete, the rename is
+  deferred for that reason instead — `blocked:unresolved`. A partial pass is
+  not a permitted outcome of this rule, so an incomplete set is a stop, not a
+  best effort. What makes a set complete is `shared/observe.md` §9.3; the test
+  is stated there and not here.
 - No behavior fixes. If a skill finds a bug, it records it and moves on. A bug
   fix is a separate commit by a human.
 - No dependency additions. No config changes. This constrains the user's
@@ -197,12 +202,28 @@ one manifest, one file per wave, plus two run-level files.
 ```
 trash/grain/
   capability.json          preflight artifact (§8c)
+  forge/                   runtime accelerator (§8d)
+  store/                   content-addressed cache and symbol graph (§8e)
+  salt                     workspace digest salt (§8e). Never transmitted.
+  consent.json             upload opt-in. Absent means no (§8e).
   roots/<root>/
     ledger.json            manifest — run facts and wave status. Never findings.
     waves/<wave>.json      findings owned by that wave.
     plan.json              artifacts the pipeline intends to create. Advisory.
     coverage.json          coverage_misses[]. Append-only by any wave.
+    events.jsonl           the record — three planes, append-only (§8e).
+    saltmap.json           digest → plaintext. Local only (§8e).
 ```
+
+`store/`, `salt` and `consent.json` sit **beside** `roots/`, not inside one,
+and the asymmetry is deliberate. The ledger is keyed by root because a finding
+is a fact about a place (§7.0). The store is keyed by content hash, and a
+content hash is the same fact in every root holding those bytes — keying it per
+root would store one file's graph twice in a monorepo and give the two copies
+no way to agree. Doctrine: `shared/observe.md` §8.2.
+
+`events.jsonl` is per-root because an event names a wave, and a wave runs
+against one root.
 
 ### 7.0 — Root keying
 
@@ -366,6 +387,22 @@ index holds no opinion about hubs. Attribute the claim to whoever made it. Get
 this backwards and a heuristic inference inherits `proven`'s exemption from
 re-verification, which is the one thing that tier exists to grant.
 
+**A grain-forged binary can never launder provenance.** A helper binary that
+`grain` itself compiled is `grain`. Findings built on its output carry
+`source: "grain"` and `confidence: "heuristic"`, permanently — however
+deterministic the helper is and however much faster than a hand pass.
+
+`source` draws its closed vocabulary from tools marked evidence-producing in
+`capability.md` §3, and a binary `grain` authored is not and cannot be in that
+list. Without this rule there is a trivial promotion path: write a script, run
+it, attribute your own inference to it, and inherit `proven`'s exemption from
+re-verification — the one thing that tier exists to grant.
+
+This is the ctags precedent again: ctags is `required` and Ev `no` because it
+indexes without asserting. The forge helper stands in exactly the same
+relation to the finding — it computes fan-in, `grain` concludes hub-in-leaf.
+See `shared/forge.md` for the mechanism.
+
 **`source` is shared with the plan; `confidence` is not.** §7.3 gives plan
 entries a `source` too, and deliberately so: both answer *what authority stands
 behind this record*, a finding citing a tool and a plan entry citing a doctrine
@@ -373,6 +410,11 @@ section. One concept, two domains, no ambiguity.
 
 `confidence` is finding-only. The plan's neighbouring field is
 `determination` — a different axis, named apart on purpose. See §7.3.
+
+There is now a third axis, `resolution`, on symbol-graph edges, named apart on
+the same reasoning. It is defined once in `shared/observe.md` §9 and is not
+restated here. A finding never carries `resolution` and an edge never carries
+`confidence`.
 
 **Emitted shape is authoritative.** The JSON above is illustrative. The field
 vocabulary a run actually uses is the one in `survey/SKILL.md`'s output block.
@@ -507,6 +549,13 @@ never add up, which is how a detector gap survives an entire pipeline run.
   session.
 - A wave whose manifest status is `blocked` does not run and writes nothing.
   `survey` set that status; the wave never opens to contest it.
+- No wave writes to `trash/grain/forge/`. The forge is `survey`'s, per §8d.
+- Every wave appends to `roots/<root>/events.jsonl`. This is the one general
+  write-scope exception in this list, and §8e states what licenses it.
+- `store/graph/` is `survey`'s alone. `store/objects/` and `store/index/` are
+  written by any wave, and only once `observe.md` §6.1's gate is satisfied —
+  until then no wave creates `store/` at all.
+- No wave transmits anything. `observe.md` §11.
 
 ---
 
@@ -590,6 +639,87 @@ and is a precondition of it.
 
 Current preflights: `doctor` → `trash/grain/capability.json`.
 Doctrine: `shared/capability.md`.
+
+## §8d. Runtime accelerators
+
+A **runtime accelerator** speeds up a wave's own work without becoming part of
+it.
+
+An accelerator:
+
+- MUST NOT create a ledger shard, emit findings, or produce any record
+  carrying `id`, `status`, `wave`, or `kind`
+- MUST NOT appear in any wave's ledger gate
+- MUST write only under `trash/grain/forge/`
+- MUST take the **LEDGER** absence convention: absent means degrade to
+  in-model, never halt
+- MUST NOT change any wave's output, only the cost of producing it
+- MUST attribute every finding built on its output to `grain` (§7.2)
+
+The absence convention here is the deliberate **contrast** with §8c. A
+preflight inverts the convention — for a preflight artifact, absent means
+halt — and that inversion is licensed by a preflight being a *precondition*
+of the pipeline. An accelerator is by definition not a precondition of
+anything, so it must never carry that inversion. An accelerator whose absence
+halts a wave has stopped being an accelerator and become an undeclared
+dependency.
+
+Current accelerators: `forge` → `trash/grain/forge/`.
+Doctrine: `shared/forge.md`. Owned by `survey`.
+
+## §8e. The record
+
+A **record artifact** states what a run did. It is written by every wave and
+it closes nothing.
+
+A record artifact:
+
+- MUST NOT create a ledger shard, and MUST NOT carry an `F-` or `P-` id or a
+  `status` field
+- MUST NOT appear in any wave's ledger gate
+- MUST be append-only, and MUST NOT be rewritten by any wave, including the
+  wave that wrote a given line
+- MUST take the **LEDGER** absence convention: absent means the run was not
+  observed, never halt
+- MUST NOT change any wave's output — a wave that behaves differently because
+  the record exists has made the record a precondition, which §8d forbids for
+  the same reason
+- MUST digest every path, symbol and source fragment it holds
+  (`observe.md` §4)
+
+Current record artifacts: `events.jsonl`, `store/`, `saltmap.json`.
+Doctrine: `shared/observe.md`. Written by every wave; `store/graph/` by
+`survey` alone.
+
+**Why the prohibition list differs from §8c and §8d.** Those two forbid `id`,
+`status`, `wave` and `kind`. An event carries `wave` and `kind` and is still
+not a finding, so the four-name list cannot be the real test — it is a proxy,
+correct for a preflight and an accelerator and too blunt here.
+
+The real test is whether a later wave can **close** something in the artifact,
+and closure needs exactly two things: an id in a shared sequence, and a
+status to change. Deny those two and a wave may label its lines however
+clearly it likes; nothing in the file can be acted on, so nothing in it can
+drift from the ledger. §8c and §8d keep their stricter list — a preflight and
+an accelerator have no reason to name a wave, and letting them would invite a
+reader to file them in the sequence.
+
+**Write scope, and why every wave gets it.** §7.5 partitions the ledger so
+that no wave edits another's conclusions. An append-only log holds no
+conclusion to edit: a line is a statement about the moment it was written,
+and a later wave appending its own line contradicts nothing. The partition
+protects mutable state, and there is none here.
+
+**The record is deletable and the ledger is not.** `rm -rf` on any record
+artifact must always be safe, which is the invariant `observe.md` §7.4 states
+as a test. That is what distinguishes this class from §7's: the ledger is the
+JSON source of truth, the record is evidence about how it came to say what it
+says.
+
+**Execution is local.** No wave makes a network call, for any purpose,
+including writing this artifact. `observe.md` §11 is doctrine for the whole
+suite and not only for the record; it is stated there because that is where
+the aggregation case it rules on is described.
 
 ---
 
