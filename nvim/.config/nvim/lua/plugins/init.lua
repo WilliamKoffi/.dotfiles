@@ -47,7 +47,28 @@ return {
     event = "VeryLazy", -- Load the plugin when Neovim is idle
   },
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
+    cmd = { "Mason", "MasonInstall", "MasonUpdate", "MasonInstallAll" },
+    -- mason.nvim has no `ensure_installed` setting of its own — it silently
+    -- ignores unknown keys, so this list only takes effect via the
+    -- :MasonInstallAll command defined below.
+    config = function(_, opts)
+      require("mason").setup(opts)
+
+      vim.api.nvim_create_user_command("MasonInstallAll", function()
+        local registry = require "mason-registry"
+        registry.refresh(function()
+          for _, name in ipairs(opts.ensure_installed or {}) do
+            local ok, pkg = pcall(registry.get_package, name)
+            if not ok then
+              vim.notify("mason: unknown package " .. name, vim.log.levels.WARN)
+            elseif not pkg:is_installed() then
+              pkg:install()
+            end
+          end
+        end)
+      end, { desc = "Install every package listed in ensure_installed" })
+    end,
     opts = {
       ensure_installed = {
         "lua-language-server",
@@ -69,7 +90,7 @@ return {
         "pint",
         "beautysh",
         "intelephense",
-        "volar",
+        "vue-language-server",
         "tailwindcss-language-server",
       },
     },

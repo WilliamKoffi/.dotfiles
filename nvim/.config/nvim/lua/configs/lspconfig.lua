@@ -66,7 +66,7 @@ lspconfig.ts_ls.setup {
 
 lspconfig.phpactor.setup {
   root_dir = function(_)
-    return vim.loop.cwd()
+    return vim.uv.cwd()
   end,
   on_init = nvlsp.on_init,
   on_attach = nvlsp.on_attach,

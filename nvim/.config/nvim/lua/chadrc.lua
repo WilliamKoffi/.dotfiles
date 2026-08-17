@@ -43,11 +43,8 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
-vim.api.nvim_create_autocmd("VimEnter", {
-  callback = function()
-    vim.cmd "NvimTreeToggle" -- Automatically open the file explorer on startup
-  end,
-})
+-- The file explorer is opened by auto-session's `no_restore_cmds` instead of a
+-- VimEnter autocmd, so it does not race the session restore for the layout.
 
 -- Plugin Configurations
 require("nvim-tree").setup {
