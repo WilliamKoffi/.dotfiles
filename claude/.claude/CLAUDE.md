@@ -16,3 +16,8 @@ session checkpoints and cannot be rewound with `/rewind`.
 # graphify
 - **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
 When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+## Git commits
+
+Do not add a `Co-Authored-By:` trailer (or any co-author attribution) to commit
+messages or PR bodies.

@@ -241,9 +241,41 @@ not left to taste:
   shards, and re-open any wave whose shard gains an open finding.
 - **Existing ledger, overlapping scope** → **refuse**, reporting both scopes. An
   overlap produces two ids for one violation; a wave closes one and the twin
-  stays open forever.
+  stays open forever. Report the `top-up` branch below as the alternative.
+- **Existing ledger, overlapping scope, invoked as `top-up`** → **merge, with a
+  duplicate filter.** See below.
 - The overlap test is a normalised path-prefix check, after resolving `.` and
   trailing slashes.
+
+### Top-up — re-surveying a scope that was already surveyed
+
+Invoked deliberately, never automatically. It exists because a survey that
+under-reports is otherwise unrepairable: only `survey` sees the whole scope, the
+overlap rule refuses a second look, and `literal` and every other findings-driven
+wave is explicitly forbidden a discovery mode. Without this branch the run's
+single largest source of missed work has no remedy at all.
+
+The invariant the refusal protects is **no two ids for one violation** — not
+*never look twice*. So look twice, and enforce the invariant directly:
+
+1. Build the existing key set: `(kind, path, symbol)` over every finding in
+   every shard, whatever its `status`. Closed and exempt findings count — a
+   violation someone already decided is not a new one.
+2. Run the full pass. Discard every candidate whose key is already present.
+3. Append what survives, allocating from `id_high_water`, and re-open any wave
+   whose shard gains an open finding. Do not touch a single existing finding.
+4. Append to `scopes[]` only if the scope string is new; a repeated scope is one
+   entry, not two.
+
+Report three numbers: candidates found, duplicates filtered, findings appended.
+A top-up that appends nothing is a useful result and must not read as a failure.
+
+**A wave already closed is not re-run by this.** Re-opening `waves.slice` because
+its shard gained a finding is the manifest telling the truth; whether to re-run
+the wave is the operator's call, and a top-up never makes it.
+
+Write the branch taken to the `decision` plane, as with every other merge-rule
+branch.
 
 **`ledger.json`** — the manifest, `convention.md` §7.1. Run facts and one
 `waves` entry per shard you wrote, each `"status": "open"`. Your own entry is
@@ -299,11 +331,40 @@ that tool in `source`. Inferring a fact a tool *would* have found is still
 A finding missing either field is malformed. Later waves branch on them, and a
 finding that omits them silently claims the stronger tier.
 
-**`kind` vocabulary.** `naming`, `literal-cluster`, `repository`, `boundary`,
-`route-file`, `defect`. This list is authoritative — `convention.md` §7 defers
-to this block, and its own examples are illustrative. A wave needing a new
-`kind` adds it here first. One invented mid-run is a `coverage_misses[]` entry,
-not a finding field.
+**`kind` vocabulary.** This list is authoritative — `convention.md` §7 defers to
+this block, and its own examples are illustrative. A wave needing a new `kind`
+adds it here first. One invented mid-run is a `coverage_misses[]` entry, not a
+finding field.
+
+| `kind` | Fired on by | You may emit it |
+|---|---|---|
+| `naming` | `slice` | yes |
+| `literal-cluster` | `literal` | **no** — `domain` only |
+| `repository` | `shelved` | **no** — `domain` only |
+| `boundary` | `boundary` | yes |
+| `route-file` | `cruddy` | yes |
+| `defect` | **nobody** | yes, under the rule below |
+
+**A finding's `kind` is what routes it.** A wave fires on a `kind`, not on a
+shard — being on `waves/literal.json` is not the same as being in the shape
+`literal` consumes. File work under a `kind` its owning wave does not fire on
+and it sits open forever while every count in the run reconciles.
+
+**`defect` means no wave owns it.** The ruling is `convention.md` §7.5; what
+follows is how it lands on you.
+
+The trap is specific and you will meet it. You cannot emit `literal-cluster` —
+you do not have the view of the concept a cluster represents, and only `domain`
+does. So a repeated-literal violation you see has no correct `kind` available to
+you, and `defect` is the nearest thing. **Use it, and say so in the `note`:**
+name the wave the work belongs to, in those words. `domain` audits this shard
+and re-raises what it finds (`domain/SKILL.md`, "Audit the shard you inherit"),
+and the `note` is what tells it which findings to look at.
+
+A banned construct is the sharpest case. Where the family's rulebook bans a
+construct outright — a TypeScript `enum` — the finding is not a permanent
+`defect`. It is the largest piece of that wave's work in the file, and it will
+be read by nobody unless the `note` routes it.
 
 Sequential, stable identifiers, allocated across all of a root's shards from one
 `F-` sequence — and `P-` likewise for the plan. Both sequences are **per-root**
@@ -381,6 +442,30 @@ explicitly rather than shipping the ledger. That asymmetry is the signature of a
 detector that swept one extension and skipped the other. It may be a true
 result; it is more often a miss.
 
+### Reconcile the counts, per file
+
+The asymmetry check above is per-extension and will not catch a uniform
+shortfall. Before writing the ledger, reconcile three numbers you already hold
+from Gate 0d:
+
+    enumerated:      every file the Gate 0d list returned
+    family_files:    those whose extension maps to a loaded rulebook
+    surveyed:        those item 7 actually walked
+
+`surveyed` must equal `family_files`. Where it does not, **enumerate the
+difference into `coverage_misses[]`** — one entry per unsurveyed file, with
+`why_missed` — before writing `coverage.json`. Report all three numbers.
+
+`coverage_misses: []` alongside `surveyed < family_files` is not a pass. Both
+statements cannot be true, and the empty array is the artifact that was supposed
+to detect exactly this. A third of a scope can go unsurveyed with every other
+gate green, and nothing downstream will ever say so: the shards will simply look
+like a codebase with less wrong with it than it has.
+
+**A shard is a floor, not a ceiling.** Say that in the run summary whenever the
+reconciliation is inexact or the resolver degraded, so no later wave reads its
+shard as the complete set of work in its category.
+
 ## Exit gate
 
 - No code file modified
@@ -392,6 +477,14 @@ result; it is more often a miss.
 - Extensions not covered by a rulebook are listed explicitly
 - The symbol inventory (item 7) covered every extension in the family, and the
   per-extension count of symbol-level findings is reported
+- `surveyed` equals `family_files`, or every file in the difference is an entry
+  in `coverage_misses[]` with a `why_missed`. All three counts are reported.
+- Every finding carries a `path`, including `literal-cluster` findings carrying
+  a `home` (`convention.md` §7.2)
+- Every `kind: "defect"` covering work an owning wave would fire on names that
+  wave in its `note`
+- The absence of a test runner, where `capability.json` reports one, is named in
+  the run summary (`convention.md` §5.1)
 - Every plan entry is `mechanical` with its fields filled, or `judged` with them
   `null` and a `question` written. Neither half-filled.
 - No plan entry carries `"rewritable": "true"`

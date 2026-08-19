@@ -1,6 +1,6 @@
 {
   "name": "grain",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Structural refactoring doctrine — cut with the grain of the code. Affordances over abilities, CRUDdy controllers, vertical slices. A ledger-driven wave pipeline from survey to drift.",
   "author": {
     "name": "llyam"

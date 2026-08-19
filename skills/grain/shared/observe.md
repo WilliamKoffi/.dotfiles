@@ -557,6 +557,37 @@ Consequences, binding:
   `blocked:unresolved` — per `convention.md` §5, which already requires all
   call sites to be updated in the same pass. An unresolved edge means the set
   of call sites is unknown, and §5 does not permit a partial pass.
+- A **threshold rule** counting consumers — `ecmascript.md ## slice`'s "`shared/`
+  only from three independent consumers onward", and every rule shaped like it —
+  **may** rest on heuristic edges, and the finding it justifies MUST record that
+  it did: `confidence: "heuristic"`, and a `disposition` naming the count as
+  unverified. `drift` reports the tally (`drift/SKILL.md`, Resolver gate).
+
+### 9.3.1 — Why a threshold records and a rename blocks
+
+The two look alike and fail differently, so the ruling differs.
+
+A rename is **total**: §5 requires every call site updated in one pass, so a
+single unseen edge does not degrade the result, it breaks the build. A missing
+consumer is a missing edit.
+
+A threshold is **ordinal**: it asks whether a count crosses a line. A missing
+consumer moves a file that should have stayed, or leaves one that should have
+moved — recoverable at the next `survey`, visible to the typecheck, and wrong in
+a way a human reading the ledger can spot. It does not corrupt.
+
+The deciding argument is the counterfactual. Blocking thresholds on `resolved`
+edges would halt the pipeline on every ctags-only root — which is currently
+every root — for a class of decision that a one-shot resolver cannot always
+settle either: dynamic imports are invisible to `ctags` outright, and a
+threshold applied over them is soft whatever the tier says. A rule that stops
+the whole pipeline and still does not guarantee the answer is not paying for
+itself.
+
+So: proceed, and mark it. What this forbids is the quiet version — a threshold
+decision recorded at `confidence: "heuristic"` while the decision it supports is
+treated downstream as settled, which is how a soft input becomes a hard fact
+without anyone deciding it should.
 
 ### 9.4 — Why this is written down
 

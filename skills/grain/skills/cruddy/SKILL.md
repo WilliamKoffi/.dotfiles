@@ -66,7 +66,10 @@ runs unconditionally; only this one checks.
 | `trash/grain/roots/<root>/waves/cruddy.json` | edit — your own findings |
 | `trash/grain/roots/<root>/ledger.json` | edit — the `waves.cruddy` key, nothing else |
 | `trash/grain/roots/<root>/plan.json` | edit — `stale` only, on entries whose `from[]` you touched |
-| `trash/grain/roots/<root>/waves/*.json` (any other) | never — not even to read |
+| `trash/grain/roots/<root>/events.jsonl` | append — open and close, `decision` plane (§7.6) |
+| `trash/grain/roots/<root>/coverage.json` | append (§7.4) |
+| `trash/grain/roots/<root>/concerns/` | create (§8f) |
+| `trash/grain/roots/<root>/waves/*.json` (any other) | append a **raised** finding, or set `stale` — never mutate one (§7.2) |
 | Domain objects, models beyond `getRouteKeyName()` | read |
 | Everything else | read |
 

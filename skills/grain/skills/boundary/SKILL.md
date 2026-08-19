@@ -59,10 +59,38 @@ own.
 - more than two booleans in props
 - a query, business rule, or network call inside a view
 
+## Output
+
+`convention.md` §7.6 governs. Your files: `waves/boundary.json`, the
+`waves.boundary` key of the manifest, `events.jsonl` (open and close, `decision`
+plane), `coverage.json`, `concerns/`, `stale` markers, and findings **raised**
+on another wave's shard per §7.2.
+
+Write `disposition` on every finding you close. Never append it to `note`.
+Check your shard's paths before you start — a `path` absent from disk is
+`blocked:stale`, never silently closed (§7.6).
+
+**You are the wave that adjudicates cross-layer edges.** Waves 2 and 3 raise
+`kind: "boundary"` findings for edges they created, and are told to defer the
+architecture question to you rather than settle it. Confirm or reject each one
+deliberately; rejecting usually means relocating the shared concept downward, to
+`shared/`, rather than reverting to duplicated declarations.
+
+`dependency-cruiser` is `preferred` (`capability.md` §3). On a degraded run
+those raised findings are your only inventory of new edges — say so in your
+report when the tool is absent, so a reader does not read your confirmation as
+tool-backed.
+
 ## Exit gate
 
 - No setter prop nor open/close mechanics in scope
 - No residual query or business rule in a view
 - Rendered output identical byte for byte
-- Test suite green, with no test modified
-- `boundary` findings closed or justified
+- Test suite green with no test modified, or the clause recorded as
+  **unsatisfiable** naming the missing runner (`convention.md` §5.1)
+- `boundary` findings closed or justified, each with a `disposition`
+- Every `kind: "boundary"` finding raised by an earlier wave is confirmed or
+  rejected, with the reason recorded
+- No finding closed on the grounds that its `path` does not exist
+- Open and close events written to `events.jsonl`
+- No file under `trash/grain/` written outside §7.6's table

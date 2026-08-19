@@ -5,7 +5,7 @@ argument-hint: [path]
 arguments: [scope]
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Edit, Write(trash/grain/roots/*/events.jsonl), Bash(git mv *), Bash(git status *), Bash(git ls-files:*), Bash(git log *)
+allowed-tools: Read, Glob, Grep, Edit, Write(trash/grain/roots/*/events.jsonl), Write(trash/grain/roots/*/concerns/**), Bash(git mv *), Bash(git status *), Bash(git ls-files:*), Bash(git log *)
 ---
 
 # Wave 8 — drift
@@ -58,6 +58,29 @@ assumed:
 - every `F-` and `P-` id is unique across all shards
 - a wave whose manifest status is `"closed"` has no `open` finding left in its
   shard
+- every finding carries a `path` (`convention.md` §7.2), and every `path`
+  resolves on disk or the finding carries `"stale": true`
+- every finding not `open` carries a `disposition`, and no `note` was
+  overwritten by a closing wave
+- every finding whose `raised_by` is not `survey` carries `status: "open"` at
+  the moment it was raised, and its id sits below the manifest's
+  `id_high_water`
+
+**The stale-path sweep.** Run it across every shard; it is the cheapest check in
+this file and it catches the failure with the longest fuse:
+
+    for w in trash/grain/roots/<root>/waves/*.json; do
+      jq -r '.findings[] | select(.path != null and .stale != true)
+             | "\(.id) \(.path)"' "$w"
+    done | while read -r id p; do [ -f "$p" ] || echo "STALE $id $p"; done
+
+Every line is a wave that moved a file and did not re-anchor (`convention.md`
+§7.6). Report them as unmet, naming the moving wave where `touched[]` or
+`created[]` identifies it.
+
+A finding carrying `path: null` is a **different** failure — a schema violation,
+not a stale coordinate. Report the two separately; conflated, the second inflates
+the first and a reader concludes the ledger is more broken than it is.
 
 **`blocked` is not `skipped`.** `convention.md` §8 makes a *skipped* wave a
 normal outcome you must **not** report as an unmet invariant. `blocked` is its
@@ -105,7 +128,20 @@ plaintext for the human reading it; the events do not.
 ## Report
 
 - Findings closed, by shard
-- Remaining open findings, with their owning wave
+- Remaining open findings, with their owning wave **and their `kind`** — and,
+  separately, the count of open findings whose `kind` their owning wave does not
+  fire on. That second number is the one no other line in this report contains:
+  a wave reporting "skipped, nothing to do" and a wave reporting "3 closed" look
+  identical whether or not open work is stranded beside them in the same file.
+  Name the wave, the `kind`, and the id of each.
+- **Concerns reconciliation** — for every note under `concerns/` claiming to
+  hand work to another wave, the finding id it raised (`convention.md` §8f).
+  A note that names no id is reported as unmet: the receiving wave reads its
+  shard, not this directory, and the work will not happen. Report also any note
+  whose named finding does not exist.
+- Coverage entries by `kind`, `out-of-perimeter` counted separately from misses.
+  The first is waves holding their perimeter and recording what they saw — a
+  healthy number, not a fault. The second is a detector gap.
 - **Plan reconciliation** — per entry: built, overruled, stale, or untouched.
   An entry left untouched by a closed wave is the report's most useful line: it
   is work the run intended and did not do, already written in the form a human
@@ -116,7 +152,15 @@ plaintext for the human reading it; the events do not.
 - Written exemptions, with their justification
 - Waves with status `blocked`, with their `reason` — reported as unmet
 - Files brought into conformance here
-- State of the build, the typecheck and the tests
+- State of the build, the typecheck and the tests. Where `capability.json`
+  reports no test runner for a family, the line reads **unsatisfiable**, naming
+  the missing runner, and lists every wave that recorded it the same way
+  (`convention.md` §5.1). It never reads green. No wave in this suite observes
+  behaviour without a runner, and the whole of §5 is a behavioural claim — a
+  green line here is the run overstating its own evidence base at the exact
+  point a reader is deciding whether to trust it.
+- Stale-path sweep: count of stale `path` values by shard, and count of findings
+  carrying `path: null`, reported separately
 - Forge gate: the engine used this run (`python` | `nim` | `none`), and
   whether `trash/grain/forge/forge.json` records a quarantine
 - Resolver gate: the resolver per root (`capability.json.roots[].resolver`),
@@ -124,6 +168,10 @@ plaintext for the human reading it; the events do not.
   wholly `heuristic` states so in one line — `observe.md` §9.3 makes that the
   difference between a pipeline that can rename across files and one that
   cannot, and it is invisible in every other line of this report.
+  Report alongside it the count of findings resting on an **unverified consumer
+  count** — a threshold decision taken over heuristic edges, permitted by
+  `observe.md` §9.3.1 and required to say so. These are the run's softest
+  conclusions and they read exactly like its firmest ones everywhere else.
 - Renames deferred `blocked:unresolved`, counted separately from
   `blocked:out-of-scope`. The two read alike and have opposite remedies: one
   needs a wider scope, the other needs a language server.
@@ -148,3 +196,15 @@ Report its count and rule numbers as a gate line of their own. A defect merely
 left `deferred`, with no count surfaced here, is indistinguishable from a
 finding someone forgot — surfacing it is the whole mechanism that keeps it from
 being silently dropped.
+
+**A `defect` describing work an owning wave would fire on fails the gate.**
+`convention.md` §7.5 reserves the kind for what no wave owns. Misfiled work
+inherits the one exemption in this file and becomes permanently invisible —
+which is the mechanism by which a rulebook's outright ban on a construct can sit
+open through an entire pipeline run and be reported as compliant throughout.
+Report each such finding by id and name the wave that should have received it.
+
+The stale-path sweep and the concerns reconciliation are gate lines too: a stale
+`path` fails the gate, and a concerns note handing work to a wave without naming
+a finding id fails it. Both are unfinished handoffs, and both are silent
+everywhere else.

@@ -125,6 +125,19 @@ present. Prefer a language server to `tree-sitter` where both exist — §9.2 of
 `observe.md` gives tree-sitter `heuristic` on cross-file edges, and cross-file
 is where the tier decides whether a rename can run at all.
 
+Probe the **test runner** per root family (`capability.md` §3, "Test runners").
+The row lists alternatives separated by `|`; the first one present satisfies it.
+Probe for the runner, never for test files — a configured runner with no tests
+yet is a different fact from neither, and only the runner is what a wave's exit
+gate invokes.
+
+This probe exists so that an absence becomes sayable. Six mutating waves assert
+*test suite green, with no test modified*; without a row here the clause cannot
+be probed, cannot be degraded on, and is skipped in silence while every gate
+reports green. Its severity and the reasoning behind it are `capability.md` §3's
+("Test runners"); take the value from the matrix like any other row and do not
+promote it.
+
 Hash the binaries grain **executes directly** — `ctags`, `ast-grep`, the
 selected resolver, `tree-sitter` — and record each as `tools[].binary_hash`.
 Resolve the path with `command -v` and hash what it points at, not the name.
@@ -221,9 +234,24 @@ Add the resolver line, one per root. One of:
 - none → *"`<root>`: ctags only — all edges heuristic; cross-file renames will
   defer."*
 
+Add the test-runner line, one per root. One of:
+
+- runner found → *"`<root>`: `<name>` — behaviour is checked at every wave
+  boundary."*
+- none → *"`<root>`: no test runner. Every wave's test clause is unsatisfiable;
+  `tsc`/build green is the entire evidence base, and neither observes
+  behaviour."*
+
+The second line is the one worth writing carefully. It is not a scolding and it
+is not a blocker — it tells a user that the waves ahead which move methods
+between objects, cut files apart and rename across a tree will be verified by
+nothing that runs the code.
+
 Name the consequence, not just the gap. A missing resolver is the one
 `preferred` gap whose effect a user cannot guess from the tool's name, and
 `observe.md` §9.3 is what turns it into deferred work rather than slower work.
+A missing test runner is the second such gap, and `convention.md` §5.1 is what
+turns it into an overstated gate rather than a slower one.
 
 Keep it to one line each. The report is a table plus a verdict, not a
 narrative.

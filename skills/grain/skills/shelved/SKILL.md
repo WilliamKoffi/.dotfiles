@@ -69,17 +69,24 @@ creates.
 **Never touches:** controllers, HTTP layer, routes, migrations, tests, views,
 domain entities. `grain:cruddy` owns the HTTP tree; `grain:domain` owns
 entities. If a rewrite here would require a controller edit, do not make it —
-leave the finding `open` with `blocked_by: "boundary"` and a one-line note. You
-do not create a `boundary` finding: §7 reserves creation to `survey`, and
-`waves/boundary.json` is not a file this wave opens.
+leave the finding `open` with `blocked_by: "boundary"` and a one-line note, and
+**raise** the controller-side work as a `kind: "boundary"` finding on
+`waves/boundary.json` (`convention.md` §7.2, "Raising") so wave 5 receives it.
+Raising is an append with `raised_by: "shelved"`, `status: "open"`; you close
+nothing there and you touch no finding already in that shard.
 
 **Never renames a file.** Creating a new file is in scope; `git mv` is
 `grain:drift`'s job. Record every file you create in the closing finding's
 `created[]` so `grain:lexicon` and `grain:drift` skip them.
 
-**Ledger scope:** `trash/grain/roots/<root>/waves/shelved.json` (your findings), the
-`waves.shelved` key of the manifest, and `stale` on `plan.json` entries whose
-`from[]` you edited. No other shard, not even to read.
+**Ledger scope:** `convention.md` §7.6's table —
+`trash/grain/roots/<root>/waves/shelved.json` (your findings), the
+`waves.shelved` key of the manifest, `events.jsonl` (open and close, `decision`
+plane), `coverage.json`, `concerns/`, `stale` on `plan.json` entries whose
+`from[]` you edited, and findings **raised** on another shard per §7.2. You
+mutate no finding you did not raise.
+
+Write `disposition` on every finding you close; never append it to `note`.
 
 ---
 

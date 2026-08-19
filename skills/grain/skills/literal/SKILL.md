@@ -18,6 +18,18 @@ This wave fires on findings only: it has no discovery mode. `domain` decided
 `kind: "literal-cluster"`, you have nothing to do —
 report it and stop, without hunting for candidates yourself.
 
+**Then say what you left behind.** Before reporting nothing to do — or reporting
+any count at all — list every open finding on your shard grouped by `kind`, and
+name every `kind` you did not fire on. You fire on `literal-cluster` alone, and
+`survey` cannot emit that kind, so anything it noticed about repeated literals
+is sitting in your shard under `defect` (`survey/SKILL.md`, `kind` vocabulary).
+Those findings are not yours to re-shape — `domain` audits and re-raises them —
+but they are yours to **surface**, because you are the only wave that opens this
+file and sees them.
+
+"3 findings closed" is true and misleading when six sit open beside them. Report
+both numbers or neither.
+
 You run after `domain` (wave 2) and before `affordance` (wave 4), for one reason
 only: `boundary` (wave 5) will type props against the unions you emit. Inverting
 the order pays for a second rewrite of every signature.
@@ -42,6 +54,17 @@ Stop and report if any of these fails:
 3. Every retained finding has a `home` that already exists on disk. If `domain`
    designated a `home` it did not create, do not create it in its place: reopen
    the finding with a note `"missing home"` and move to the next one.
+4. Every retained finding's `path`, and every `sites[].path`, exists on disk.
+   Wave 1 moves and renames files, and your shard was written before it ran. A
+   path that does not resolve is **`blocked:stale`** — never a finding you close
+   as no-longer-applicable. Set the status, note the path, and move on; §7.6
+   makes repairing it the moving wave's duty, not a licence for you to guess a
+   destination.
+
+   The same rot reaches line coordinates, and those you cannot check. A `note`
+   citing `file.ts:32` is wrong twice over once the file moved and an earlier
+   wave inserted declarations above that line. Trust `sites[].range` — which
+   step 3 verifies against the text — and never a coordinate in prose.
 
 If invoked with a path, retain only the findings whose **every** `sites[].path`
 falls under that path. A finding partially in the perimeter is ignored entirely,
@@ -97,7 +120,24 @@ For each open and applicable `literal-cluster` finding, in ledger order:
 5. Annotate the directly receiving parameter or field with the union type, if
    and only if the current annotation is `string`, `number`, or absent.
 6. Update the finding: `status: "closed"` if fully applied, otherwise leave it
-   `"open"` with a note and the list of skipped sites.
+   `"open"`. Either way write `disposition` (`convention.md` §7.2) — what you
+   emitted and where — and `skipped_sites[]` for every site you did not apply,
+   each with its reason. Never append any of this to `note`.
+
+   A finding closed with a non-empty `skipped_sites[]` is closed as to its
+   decision and incomplete as to its application. Only the field says so, and a
+   reader counting closures will not know otherwise.
+
+7. **Record the residue.** A site list is a commitment, and an incomplete one
+   silently caps what you are allowed to fix. Where you replace a literal and
+   the same value appears again in the same file *outside* every recorded
+   `range` — a `Record<Union, string>` key, a `?? 'formal'` default — you were
+   right not to touch it, and the file is now visibly inconsistent.
+
+   Append each occurrence to `coverage.json` as `kind: "out-of-perimeter"`
+   (`convention.md` §7.4), with `why_missed` naming the range rule. Holding the
+   perimeter is correct; letting the observation die with the run is not. The
+   perimeter is what you may change — it was never what you may notice.
 
 Apply findings one at a time, re-reading each file before editing: ranges within
 a file shift as you go.
@@ -140,9 +180,25 @@ wave will carry it as a known gap rather than a regression.
 
 ## Output
 
-Write only to `trash/grain/roots/<root>/waves/literal.json` and the `waves.literal` key of
-the manifest — plus `stale` on any `plan.json` entry whose `from[]` you edited.
-Emit no other report file and no new finding of another `kind`.
+`convention.md` §7.6 governs. Your files: `waves/literal.json`, the
+`waves.literal` key of the manifest, `events.jsonl` (open and close, `decision`
+plane), `coverage.json`, `concerns/`, and `stale` on any `plan.json` entry whose
+`from[]` you edited.
+
+You may **raise** a finding on another wave's shard (`convention.md` §7.2) and
+you may not close one there. Two cases arise here routinely:
+
+- A site you skipped because the wave that owns it comes later — a prop
+  re-spelling a subset of the concept belongs to `boundary`, which types props
+  against the unions you emit and is the reason for this wave's position in the
+  order. Raise it on `waves/boundary.json`, and note where the subset is already
+  derivable (`keyof typeof FACETS`) rather than asking for a second concept.
+- A new cross-layer import edge created by importing the emitted symbol into a
+  layer that did not reach the `home` before. Raise it as `kind: "boundary"`;
+  the architecture question is above this wave's perimeter, and precondition 3
+  forbids you the clean fix of relocating the concept.
+
+Emit no report file of your own beyond these.
 
 A `literal-cluster` finding whose `home` is a file that does not yet exist
 carries a `plan_id`: the plan entry names the file to create. This is the one
@@ -162,8 +218,19 @@ mode. Then continue.
 ## Exit gate
 
 - Every retained `literal-cluster` finding is `closed`, or `open` with an
-  explicit note
+  explicit note — and every one carries a `disposition`
 - No emitted member differs from its original literal
 - No file created outside the `home`s designated by `domain`
+- Every open finding on this shard is reported, grouped by `kind`, with every
+  `kind` not fired on named
+- No finding closed on the grounds that its `path` does not exist —
+  `blocked:stale` instead
+- Every same-value occurrence left outside a recorded `range` is an
+  `out-of-perimeter` entry in `coverage.json`
 - Typecheck green
-- Test suite green, with no test modified
+- Test suite green with no test modified, or the clause recorded as
+  **unsatisfiable** naming the missing runner (`convention.md` §5.1) — value
+  identity is the one error class a typecheck cannot catch, so a run without
+  tests must say so rather than let a green typecheck stand in
+- Open and close events written to `events.jsonl`
+- No file under `trash/grain/` written outside §7.6's table

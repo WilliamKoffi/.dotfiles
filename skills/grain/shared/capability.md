@@ -222,6 +222,7 @@ two disjoint surfaces, and the PHP-table prohibition still stands.
 | `knip` | 5.0 | `survey` `drift` | `preferred` | yes |
 | `dependency-cruiser` | 16 | `boundary` | `preferred` | yes |
 | `ts-morph` | 20 | `lexicon` `split` | `preferred` | no |
+| `vitest` \| `jest` \| `node --test` | any | any mutating wave (post-mutation gate) | `preferred` | no |
 
 ### PHP roots
 
@@ -237,6 +238,7 @@ two disjoint surfaces, and the PHP-table prohibition still stands.
 | `deptrac` | 2.0 | `boundary` | `preferred` | yes |
 | `phpactor` | 2024.x | `lexicon` | `preferred` | no |
 | `phpinsights` | 2.0 | `drift` | `optional` | no |
+| `pest` \| `phpunit` | any | any mutating wave (post-mutation gate) | `preferred` | no |
 
 Two rulings encoded above:
 
@@ -260,6 +262,7 @@ to analyze, and always verifies with the post-mutation gate.
 | `cargo check` | — | any mutating wave (post-mutation gate) | `required` | no |
 | `cargo clippy` | — | `survey` `drift` | `preferred` | yes |
 | `cargo machete` | any | `survey` | `optional` | yes |
+| `cargo test` | — | any mutating wave (post-mutation gate) | `preferred` | no |
 
 ### Nim roots
 
@@ -268,11 +271,37 @@ to analyze, and always verifies with the post-mutation gate.
 | `nim` | 2.0 | all | `required` | no |
 | `nim check` | — | any mutating wave (post-mutation gate) | `required` | no |
 | `nim jsondoc` | — | `survey` | `preferred` | yes |
+| `testament` | — | any mutating wave (post-mutation gate) | `preferred` | no |
 
 Nim is the thin ecosystem. Neither `ctags` nor `ast-grep` ships a Nim parser,
 so the `required` `ctags` grant on `survey` is **waived for Nim roots** and
 `nim jsondoc` substitutes as the index source. Record this waiver explicitly in
 `capability.json` rather than leaving it implicit.
+
+### Test runners
+
+Each family's table carries one test-runner row, alternatives separated by `|`:
+the first one present satisfies it. Probe for the **runner**, never for test
+files — a repo with a configured runner and no tests yet is a different fact
+from a repo with neither, and only the runner is what the gate invokes.
+
+**`preferred`, never `required`.** Every mutating wave's exit gate asserts *test
+suite green, with no test modified*, and `rules/families.md` makes it a pipeline
+invariant — so the row looks like it should block. It must not. Adding a test
+framework is the repository's decision, not a refactor wave's, and a `required`
+severity here would refuse to run the pipeline on any untested repo, which is a
+large share of the repos most in need of it.
+
+What the row buys instead is that the absence becomes **sayable**. Before these
+rows existed, six waves asserted a clause `doctor` could not probe, `survey`
+could not degrade on, and no wave could report — so every run skipped it in
+silence and every gate went green. `convention.md` §5.1 is the consuming ruling:
+the clause is recorded as unsatisfiable, naming the missing runner from
+`gaps[]`, and never as satisfied.
+
+This is the `severity` axis working as designed. `preferred` means *proceed,
+degraded, and say so* — the same treatment `dependency-cruiser` and `ts-morph`
+get, for the same reason.
 
 ## §4 capability.json schema
 

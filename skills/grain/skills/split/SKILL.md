@@ -48,12 +48,44 @@ Split only on a real responsibility boundary.
 Every file created here follows wave 1's naming convention for its family.
 Consult the `## slice` section of the rulebook — you re-decide nothing.
 
+## Output
+
+`convention.md` §7.6 governs. Your files: `waves/split.json`, the `waves.split`
+key of the manifest, `events.jsonl` (open and close, `decision` plane),
+`coverage.json`, `concerns/`, `stale` markers, and findings **raised** on
+another wave's shard per §7.2.
+
+Write `disposition` on every finding you close. Never append it to `note`.
+`created[]` for every file you wrote — from that moment the name is frozen
+against `lexicon` and `drift` (`convention.md` §7.5).
+
+**You cut files apart, so you re-anchor.** §7.6 binds you exactly as it binds
+`slice`: after your last cut, sweep every shard for findings whose `path` names
+a file you split, and rewrite it to whichever half now holds the symbol the
+finding is about. Where the finding spans both halves, point `path` at the one
+holding the declaration and say so in `disposition`. Set `"stale": true` only
+where no half is the right answer.
+
+Check your own shard's paths before you start, for the same reason: wave 1 moved
+files after your shard was written.
+
+**Extraction has a red line.** The "extract inline SVGs to `assets/`" rule must
+never be pointed at an untouchable zone — a generated-but-committed registry, a
+vendored asset tree, a template family whose inline styling is deliberate.
+`survey` records those zones; read them before extracting anything.
+
 ## Exit gate
 
 - No file above the threshold without a written exemption
 - Every created file conforms to its family's convention
 - No import cycle introduced
-- Test suite green, with no test modified
-- `split` findings closed or justified
+- Test suite green with no test modified, or the clause recorded as
+  **unsatisfiable** naming the missing runner (`convention.md` §5.1)
+- `split` findings closed or justified, each with a `disposition`
+- **Zero stale `path` in any shard** after your cuts
+- No file created inside an untouchable zone
+- No finding closed on the grounds that its `path` does not exist
+- Open and close events written to `events.jsonl`
+- No file under `trash/grain/` written outside §7.6's table
 - No middleware declaration outside the root routes file — `php.md ## split`
 - No `routes/` decomposition performed while a `C9.2` finding is open

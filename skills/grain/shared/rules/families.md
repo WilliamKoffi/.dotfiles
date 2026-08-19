@@ -57,6 +57,12 @@ This table is a summary, not the authority.
 Valid for every family, every wave:
 
 - `src/legacy/` is immutable. Do not read from it, import from it, or modify it.
-- The test suite is green at every wave boundary.
+- The test suite is green at every wave boundary — or, where the root has no
+  test runner (`capability.md` §3), every wave records the clause as
+  **unsatisfiable** and never as satisfied (`convention.md` §5.1).
 - One wave = one commit.
 - No wave modifies a file outside its scope.
+- A wave that invalidates a path re-anchors the shards it invalidated
+  (`convention.md` §7.6).
+- A wave closes a finding with `disposition`, never by appending to `note`
+  (`convention.md` §7.2).

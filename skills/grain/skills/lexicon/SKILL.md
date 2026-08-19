@@ -54,11 +54,38 @@ one family's rule to another.
 One rename at a time, across the whole scope, verified, then the next. A batch of
 simultaneous renames makes the conflict undetectable.
 
+## Output
+
+`convention.md` §7.6 governs. Your files: `waves/lexicon.json`, the
+`waves.lexicon` key of the manifest, `events.jsonl` (open and close, `decision`
+plane), `coverage.json`, `concerns/`, `stale` markers, and findings **raised**
+on another wave's shard per §7.2.
+
+Write `disposition` on every finding you close. Never append it to `note`.
+Check your shard's paths before you start — a `path` absent from disk is
+`blocked:stale`, never silently closed (§7.6).
+
+**The resolution tier decides whether you may rename at all.** Renaming an
+exported symbol requires **every** call-site edge `resolved`; one heuristic edge
+defers the whole rename as `blocked:unresolved` (`observe.md` §9.3,
+`convention.md` §5). On a `ctags`-only root every edge is heuristic, so most
+exported renames defer — that is the correct outcome, not a degraded one, and
+your report must distinguish `blocked:unresolved` from `blocked:out-of-scope`.
+The two read alike and have opposite remedies: one needs a wider scope, the
+other needs a resolver.
+
 ## Exit gate
 
 - Zero prefix forbidden by the family concerned
 - Zero memory-structure or metadata suffix
 - No new abbreviation
 - Build green, typecheck green
-- Test suite green, with no test modified
-- `lexicon` findings closed or justified
+- Test suite green with no test modified, or the clause recorded as
+  **unsatisfiable** naming the missing runner (`convention.md` §5.1)
+- `lexicon` findings closed or justified, each with a `disposition`
+- No exported symbol renamed on a set of call sites containing a `heuristic`
+  edge
+- `blocked:unresolved` and `blocked:out-of-scope` counted separately
+- No finding closed on the grounds that its `path` does not exist
+- Open and close events written to `events.jsonl`
+- No file under `trash/grain/` written outside §7.6's table

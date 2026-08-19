@@ -182,6 +182,29 @@ Consequences, binding on every skill:
   `trash/grain/` adds no dependency to any manifest, writes no config file the
   repo will read, and is removed by deleting one gitignored directory.
 
+### 5.1 — An unsatisfiable gate clause is recorded, never skipped
+
+Every mutating wave's exit gate asserts *test suite green, with no test
+modified*, and `rules/families.md` makes it a pipeline invariant. Some
+repositories have no test runner at all — `capability.md` §3 probes for one per
+family and records its absence in `gaps[]`.
+
+Where the clause cannot be evaluated, the wave writes it to the `decision` plane
+and to its report as **unsatisfiable**, naming the missing runner. It does not
+write it as satisfied, and it does not omit the line.
+
+This is not bookkeeping. A typecheck observes types and a build observes
+resolution; neither observes behaviour, and this suite's own §5 is a behavioural
+claim. The waves that move methods between objects, cut files apart and rename
+across a tree are exactly the ones a typecheck cannot vindicate. A gate line
+that silently disappears when it cannot be met turns *we did not check* into *we
+checked and it passed*, and the run's evidence base is overstated by precisely
+the amount that matters most.
+
+The severity of an absent runner, and why it carries that severity, belong to
+`capability.md` §3 ("Test runners") and are not restated here. This section
+rules only on what a wave writes when the clause cannot be evaluated.
+
 ---
 
 ## §6. The legacy red line
@@ -213,6 +236,7 @@ trash/grain/
     coverage.json          coverage_misses[]. Append-only by any wave.
     events.jsonl           the record — three planes, append-only (§8e).
     saltmap.json           digest → plaintext. Local only (§8e).
+    concerns/<slug>.md     judgment calls and degradations, in prose (§8f).
 ```
 
 `store/`, `salt` and `consent.json` sit **beside** `roots/`, not inside one,
@@ -256,10 +280,18 @@ A ledger that reaches a commit is a bug: it records a run, not a decision, and
 it will conflict on every branch that touches the same scope. If `trash/` is
 already tracked, `git rm -r --cached trash/` before continuing.
 
-The shape is the contract. A wave opens exactly two files —
-`roots/<root>/ledger.json` and `roots/<root>/waves/<itself>.json` — so write scope is enforced by what it holds open rather than by
-an instruction telling it to behave. Per §0, a constraint that survives only in
-prose is a constraint that drifts.
+The shape is the contract. A wave's two mutable files are
+`roots/<root>/ledger.json` and `roots/<root>/waves/<itself>.json`; §7.6 gives
+the full table, including the three appends and the two markers that reach
+outside it.
+
+Where a wave touches no source file, write scope is enforced by what it holds
+open rather than by an instruction telling it to behave, and `survey`'s and
+`drift`'s grants are written that way. A mutating wave needs open `Write` and
+`Edit` for the repository itself, so for it the ledger scope survives only as
+prose — §7.6 states it once and every mutating exit gate re-asserts it. Per §0
+that is the weaker arrangement, and it is the reason the assertion appears in
+the gate rather than the commentary.
 
 ### 7.1 — The manifest
 
@@ -328,6 +360,7 @@ invariant and `drift` must report it. It is written by `survey` from
       "status": "open",
       "raised_by": "survey",
       "closed_by": null,
+      "disposition": null,
       "source": "grain",
       "confidence": "heuristic"
     }
@@ -337,22 +370,85 @@ invariant and `drift` must report it. It is written by `survey` from
 
 **Status values:** `open` → `closed` | `deferred` | `blocked` | `exempt`
 
+**`path` is mandatory on every finding**, whatever else the finding carries. A
+`kind` with a richer location field — `literal-cluster`'s `home`, §7.3's
+`from[]` — sets `path` to the same value alongside it. The richer field stays
+authoritative for the wave that consumes it; `path` exists so that one query
+answers *what does this run say about this file* across every shard. A finding
+that omits it is invisible to every path-keyed sweep in the suite, including the
+staleness check below, and its absence reads as `null` — indistinguishable from
+a stale path that resolved to nothing.
+
 **Optional fields**, written by the wave that closes a finding and read by later
 waves: `created[]` lists files the wave wrote — `lexicon` and `drift` skip them,
 because a name set by doctrine this run must not be re-decided in the same run.
 `touched[]` lists files it edited. `rename_pending[]` hands a legacy filename to
 `drift` without doing a `git mv`. `plan_id` points at the artifact in
-`plan.json` this finding is closed by building.
+`plan.json` this finding is closed by building. `skipped_sites[]` lists the
+sites inside a finding's own perimeter that the wave did not apply, each with a
+reason — a finding closed with a non-empty `skipped_sites[]` is closed as to its
+decision and incomplete as to its application, and only the field says so.
+
+**`note` states the problem; `disposition` states the answer.** `note` is
+written by whoever raised the finding and is **never** overwritten or appended
+to by the wave that closes it. The closing wave writes `disposition`: one or two
+sentences on what it actually did, or on why it did nothing.
+
+Both fields are needed and neither substitutes for the other. Fold the answer
+into `note` and every query that reads `note` as a problem statement gets a
+mixed record; leave it out entirely and the ledger reports the wave as having
+resolved nothing. The word `resolution` is deliberately **not** used here: §9.1
+of `shared/observe.md` reserves it for a graph edge's axis, and a field name
+serving two axes is the drift §0 forbids.
+
+**`stale`** is set on a finding by any wave that moves, renames or deletes the
+file its `path` names — see §7.6, "Re-anchoring". It is the finding-level twin
+of §7.3's `stale` on a plan entry, and it is written under the same licence.
 
 **Cross-shard deferral.** A finding carrying `defer_to: "<wave>"` stays in the
 deferring wave's shard with `status: "deferred"`. The named wave does **not**
-act on it this run — it is the next `survey`'s input. No wave writes into
-another wave's shard under any circumstance; the single exception in this file
-is `stale` on `plan.json`, §7.3.
+act on it this run — it is the next `survey`'s input.
+
+**No wave mutates a finding in another wave's shard.** That is the invariant,
+and it is about *conclusions*: nobody edits, closes, re-opens, re-kinds or
+re-notes work another wave owns. Three writes are permitted outside a wave's own
+shard, and all three are appends or markers that decide nothing:
+
+| Write | Where | §  |
+|---|---|---|
+| `stale` on a plan entry whose `from[]` you edited | `plan.json` | §7.3 |
+| `stale` on a finding whose `path` you moved or deleted | any shard | §7.6 |
+| a **new** finding with `raised_by: <itself>`, `status: "open"` | any shard | below |
 
 Sharding makes this rule load-bearing rather than polite. In one flat file a
 misrouted write was merely untidy; here it is a wave reaching into a document it
 never opened.
+
+**Raising.** Any wave may append a new finding to another wave's shard. It sets
+`raised_by` to its own name, `status: "open"`, and `closed_by: null`, and it
+allocates the id from the manifest's `id_high_water` (§7.1), which it raises in
+the same write. It touches no finding already in that shard, and it never
+closes, exempts or answers what it raised — a wave that could both raise and
+close on another shard would be deciding that wave's work for it.
+
+This is the only channel a mid-pipeline discovery has. Without it, a wave that
+notices real work outside its perimeter has exactly two options — act on it,
+widening its own blast radius past the gate that was meant to check it, or write
+it in prose that the owning wave never reads. Both are worse than a fourth line
+in a JSON array. The rule this replaces read *only `survey` creates findings*,
+which was already false of `domain` (`domain/SKILL.md`, "Repeated literals") and
+which `raised_by` had no purpose under.
+
+`survey` keeps one thing the others do not: it alone creates **plan entries**,
+and it alone may raise a finding without having been in the file.
+
+**The `kind` must be one the owning wave fires on.** A finding is routed by
+`kind`, not by which shard it sits in, and a shard is not a queue a wave drains
+— it is a set of shapes the wave knows how to consume. Filing work under a
+`kind` its owning wave does not fire on puts it somewhere it will never be read
+and reports it as routed.
+
+`defect` is the sharp case, and §7.5 rules on it below.
 
 **Provenance.** Every finding carries two further fields, stating what produced
 it and how far it may be trusted:
@@ -518,8 +614,25 @@ computed against a file that no longer reads the way it did at wave 0.
 }
 ```
 
-A wave appends an entry whenever it acts on a symbol no finding covers. `drift`
-reports the total and the per-extension breakdown as a gate line.
+A wave appends an entry whenever it **acts on** a symbol no finding covers, or
+**observes** an in-family signal it is not permitted to act on. `drift` reports
+the total and the per-extension breakdown as a gate line.
+
+The second half is the one that gets forgotten, and it is the more valuable of
+the two. A wave holding its perimeter correctly — declining to touch a literal
+three lines outside its recorded `range`, declining to rename a folder whose
+other occupants are not in the ledger — is behaving exactly as designed, and the
+signal it saw dies with the run unless it lands here. The perimeter is what a
+wave may *change*; it was never what a wave may *notice*.
+
+Entries of that second kind carry `kind: "out-of-perimeter"` and a `why_missed`
+naming the rule that stopped the wave. They are not failures and `drift` does
+not report them as unmet — they are the next `survey`'s input, in the one file
+that is neither a shard nor prose.
+
+An entry here is not a substitute for raising a finding (§7.2) where the work
+has an owning wave and a `kind` that wave fires on. Record what has no home;
+raise what has one.
 
 This file is the **one named exception** to the contract below: it is
 append-only by any wave, authored by whichever wave found the gap. It closes
@@ -533,14 +646,29 @@ never add up, which is how a detector gap survives an entire pipeline run.
 
 ### 7.5 — Contract
 
-- Only `survey` creates findings, and only `survey` creates plan entries.
+- Only `survey` creates plan entries. Any wave may **raise** a finding on any
+  shard, under §7.2's three conditions; only `survey` may raise one without
+  having been in the file.
 - A wave mutates its own shard and the manifest key bearing its own name. Its
-  only write elsewhere is `stale` on `plan.json`.
+  writes elsewhere are the three in §7.2's table and nothing else.
 - No wave closes, edits, or reads-to-mutate a finding in another wave's shard.
+  Appending one is not mutating one.
 - `drift` reads every shard, the manifest, the plan and the coverage file; it
   mutates no status.
-- A wave whose shard holds zero open findings writes `"status": "skipped"` to
-  the manifest and exits without opening a source file.
+- A wave whose shard holds zero open findings **of a `kind` it fires on** writes
+  `"status": "skipped"` to the manifest and exits without opening a source file
+  — and names, in its report, every open finding it left behind and the `kind`
+  each carries. Being on the shard is not the same as being routed, and a wave
+  that reports "nothing to do" while open findings sit in its own file is
+  telling the truth in the most misleading available form.
+- **`defect` means no wave owns it.** It is for a correctness bug a human must
+  fix (`crud.md` §C9.1, §C9.5) — never for work that has an owning wave and a
+  `kind` that wave fires on. A wave that meets a `defect` describing work it
+  would fire on if re-shaped does not act on it and does not re-kind it in
+  place: it raises a correctly-shaped finding per §7.2 and cross-references the
+  `defect`, which stays for `drift` to count. `defect` is the one kind that
+  passes `drift`'s exit gate unclosed, which makes it the one kind that silently
+  absorbs anything filed into it by mistake.
 - A wave that builds a plan entry lists the file in the closing finding's
   `created[]`. From that moment the name is frozen against `lexicon` and
   `drift`.
@@ -550,12 +678,91 @@ never add up, which is how a detector gap survives an entire pipeline run.
 - A wave whose manifest status is `blocked` does not run and writes nothing.
   `survey` set that status; the wave never opens to contest it.
 - No wave writes to `trash/grain/forge/`. The forge is `survey`'s, per §8d.
-- Every wave appends to `roots/<root>/events.jsonl`. This is the one general
-  write-scope exception in this list, and §8e states what licenses it.
+- Every wave appends to `roots/<root>/events.jsonl` and may append to
+  `roots/<root>/coverage.json` and `roots/<root>/concerns/`. These are the
+  general write-scope exceptions in this list; §8e licenses the first, §7.4 the
+  second, §8f the third. All three are append-only and none decides anything.
 - `store/graph/` is `survey`'s alone. `store/objects/` and `store/index/` are
   written by any wave, and only once `observe.md` §6.1's gate is satisfied —
   until then no wave creates `store/` at all.
 - No wave transmits anything. `observe.md` §11.
+
+### 7.6 — Closing a finding
+
+Every wave in §8 follows this section. It is stated once here and referenced
+from each `SKILL.md`, because a ledger protocol restated nine times is a ledger
+protocol with nine dialects — which is what §0 exists to prevent, and what
+happened while this section did not exist.
+
+**Open exactly these.** Nothing else in `trash/grain/` is yours:
+
+| File | Access |
+|---|---|
+| `roots/<root>/waves/<itself>.json` | edit — your own findings |
+| `roots/<root>/ledger.json` | edit — the `waves.<itself>` key, and `id_high_water` when you raise |
+| `roots/<root>/events.jsonl` | append |
+| `roots/<root>/coverage.json` | append (§7.4) |
+| `roots/<root>/concerns/` | create (§8f) |
+| `roots/<root>/plan.json` | edit — `stale` only |
+| `roots/<root>/waves/*.json` (any other) | append a raised finding, or set `stale` — never mutate |
+
+**Where the grant can carry this, it does.** A wave that is read-only as to code
+— `survey`, `drift` — enumerates these paths in `allowed-tools` and holds
+nothing wider, so the tool layer enforces the table and no instruction has to.
+
+A mutating wave cannot. It creates and edits source files across the repository,
+so its `Write` and `Edit` grants are necessarily open, and an open grant covers
+`trash/grain/` too. For those waves this table is the constraint the tool layer
+does **not** hold, which is exactly why it is stated once here rather than nine
+times, and why each mutating wave's exit gate asserts it: *no file under
+`trash/grain/` written outside the table above.* Treat it as tighter than the
+grant, not looser — the grant is wide because source editing needs it, not
+because the ledger is open.
+
+**Two events, minimum.** Append to the `decision` plane (`observe.md` §2) as you
+go, never batched at the end:
+
+- **On open** — the wave name, the scope, the run id, the fingerprint, the
+  findings you retained and the ones you did not, and every gate outcome
+  including the ones that passed.
+- **On close** — counts by final status, the exit-gate results, and one entry
+  per gate clause you could not evaluate (§5).
+
+A wave that mutates source and logs neither leaves the manifest asserting a
+result nothing corroborates. `ledger.json` says a wave closed twenty-five
+findings; only the record says a wave ran.
+
+**Write the closing fields.** `status`, `closed_by: <itself>`, `disposition`
+(§7.2) on every finding you touch — plus `created[]`, `touched[]`,
+`skipped_sites[]` where they apply. Never write `note`.
+
+**Re-anchoring.** *A wave that invalidates a path repairs the shards it
+invalidated.* Before your close event, for every path you moved, renamed or
+deleted this run:
+
+1. Sweep every shard for findings whose `path` names it.
+2. Rewrite `path` to the new location where the file moved, and set
+   `"stale": true` where it did not — a delete, or a move you cannot resolve to
+   a single destination.
+3. Do nothing else to those findings. You do not close them, re-note them or
+   judge them; you are correcting a coordinate, not answering a question.
+
+`slice` is the wave whose entire perimeter is paths, so it is the only one that
+can invalidate every other shard at once — but `split` and `drift` move files
+too, and the duty is the same for all three. The failure this prevents is
+specific and quiet: a wave opens its shard, finds the file missing, and closes
+the finding as stale rather than hunting for where it went. Correctly identified
+work disappears, and every count in the run still reconciles.
+
+Line and column coordinates cannot be repaired this way, which is the reason not
+to put them where nothing can reach them. A coordinate belongs in a structured
+field a sweep can find — `sites[].range`, `path` — never in `note` prose.
+
+**Record what you could not do.** Append to `coverage.json` (§7.4) for every
+in-family signal you saw and were not permitted to act on, and raise a finding
+(§7.2) for every one that has an owning wave and a `kind` that wave fires on.
+File a concerns note (§8f) for every judgment call a later reader would
+otherwise have to re-derive from the diff.
 
 ---
 
@@ -720,6 +927,50 @@ says.
 including writing this artifact. `observe.md` §11 is doctrine for the whole
 suite and not only for the record; it is stated there because that is where
 the aggregation case it rules on is described.
+
+## §8f. The concerns record
+
+A **concerns note** states a judgment call in prose, for a human. It is written
+by the wave that made the call and it closes nothing.
+
+Path: `trash/grain/roots/<root>/concerns/<slug>.md`. Per-root, on §7.0's
+reasoning: a concern is a fact about a decision taken in one root, and two roots
+are two runs that happen to share a session.
+
+A concerns note:
+
+- MUST NOT carry an `F-` or `P-` id of its own, or a `status` field
+- MUST NOT appear in any wave's ledger gate
+- MUST take the **LEDGER** absence convention: absent means no concern was
+  recorded, never halt
+- MUST NOT change any wave's output
+- MAY name findings, paths and symbols in plaintext — it is written for the
+  human reading it, and unlike §8e it is not aggregated, not transmitted and not
+  digested
+
+**Required content.** Four things, because they are the four a later reader
+cannot recover from the diff: what was done, the concern that remains, why the
+doctrinally clean option was not taken, and what would actually resolve it.
+
+**A deferral in prose is not a handoff.** A concerns note that hands work to
+another wave MUST name the finding id it raised on that wave's shard (§7.2). The
+next wave reads its shard, not this directory, and it does not re-read closed
+findings. Without the id the work does not happen and nothing in the pipeline
+notices — the note's own quality is no protection, because nothing machine-read
+ever opens it.
+
+The note exists **in addition to** the finding, never instead of it. Same for
+`coverage.json`: prose here does not discharge the append there.
+
+**Why this is a class and not a habit.** §8e's record answers *what did this run
+do* and is digested, append-only and machine-shaped by construction. It cannot
+hold *here is why the clean option was wrong*, and that is the sentence a human
+returning in three months needs most. The two artifacts are not redundant; one
+is evidence and the other is reasoning.
+
+**Deletable, like §8e and unlike §7.** `rm -rf` on this directory must always be
+safe. A concerns note that some wave's gate depends on has stopped being a
+concerns note and become an undeclared precondition.
 
 ---
 
