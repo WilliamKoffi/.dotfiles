@@ -26,18 +26,42 @@ todo() {
 		  if (keep) printf "%s", section
 		  section=$0 ORS
 		  keep=0
+		  skip_indent=-1
 		  next
 		}
 
-		/^- \[x\]/ { next }   # skip completed tasks
+		/^[ \t]*- / {
+		  match($0, /^[ \t]*/)
+		  indent = RLENGTH
+		  
+		  if (skip_indent >= 0 && indent > skip_indent) {
+		    next
+		  }
+		  skip_indent = -1
 
-		/^- \[ \]/ {
-		  section = section $0 ORS
-		  keep=1
-		  next
+		  if ($0 ~ /^[ \t]*- \[[xX-]\]/) {
+		    skip_indent = indent
+		    next
+		  }
+
+		  if ($0 ~ /^[ \t]*- \[ \]/) {
+		    section = section $0 ORS
+		    keep=1
+		    next
+		  }
 		}
 
 		{
+		  if (skip_indent >= 0) {
+		    if ($0 ~ /^[ \t]+/) {
+		      next
+		    }
+		    if ($0 ~ /^$/) {
+		      section = section $0 ORS
+		      next
+		    }
+		    skip_indent = -1
+		  }
 		  section = section $0 ORS
 		}
 

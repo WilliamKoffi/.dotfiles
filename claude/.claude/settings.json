@@ -10,7 +10,7 @@
       "Bash(node dist/cli.js:*)"
     ]
   },
-  "model": "sonnet",
+  "model": "opus",
   "footerLinksRegexes": [],
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
@@ -18,7 +18,7 @@
     "vercel@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true
   },
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
   "tui": "fullscreen",
   "theme": "dark-daltonized"
 }
