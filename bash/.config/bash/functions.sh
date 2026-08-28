@@ -1,93 +1,66 @@
 . $LOG_MESSAGE_PATH
 
-todo() {
-	local todo_dir=~/lab/temp/todos/
-	mkdir -p "$todo_dir"
-	cd "$todo_dir" 2>/dev/null || {
-		print_message error "Failed to change directory to $todo_dir"
+# todo -- daily TODO file manager.
+#
+# The implementation lives in Nim at ~/.dotfiles/scripts/todo (this
+# repository is public, so the compiled binary is never committed). This
+# function is only a bootstrap: it makes sure ~/.local/bin/todo exists and
+# is not older than the source, then hands over to it.
+
+__todo_build() {
+	local src_dir="$1" bin="$2"
+	local build_dir="${XDG_CACHE_HOME:-$HOME/.cache}/todo-build"
+
+	if ! command -v nim >/dev/null 2>&1; then
+		print_message error "nim is required to build todo but is not on PATH"
 		return 1
-	}
-	local today_file="TODO.$(date +%Y%m%d).md"
-	local yesterday_file="TODO.$(date -d "yesterday" +%Y%m%d).md"
-
-	# If today's file exists, just open it
-	if [[ -f "$today_file" ]]; then
-		print_message info "Today's TODO file already exists."
-		nvim "$today_file"
-		return 0
 	fi
 
-	# Function to clean TODO
-	clean_todo() {
-		awk '
-		NR<=2 { print; next }   # always keep first two lines
+	print_message info "building todo from $src_dir"
+	mkdir -p "$build_dir" "$(dirname "$bin")" || return 1
 
-		/^## / {
-		  if (keep) printf "%s", section
-		  section=$0 ORS
-		  keep=0
-		  skip_indent=-1
-		  next
-		}
-
-		/^[ \t]*- / {
-		  match($0, /^[ \t]*/)
-		  indent = RLENGTH
-		  
-		  if (skip_indent >= 0 && indent > skip_indent) {
-		    next
-		  }
-		  skip_indent = -1
-
-		  if ($0 ~ /^[ \t]*- \[[xX-]\]/) {
-		    skip_indent = indent
-		    next
-		  }
-
-		  if ($0 ~ /^[ \t]*- \[ \]/) {
-		    section = section $0 ORS
-		    keep=1
-		    next
-		  }
-		}
-
-		{
-		  if (skip_indent >= 0) {
-		    if ($0 ~ /^[ \t]+/) {
-		      next
-		    }
-		    if ($0 ~ /^$/) {
-		      section = section $0 ORS
-		      next
-		    }
-		    skip_indent = -1
-		  }
-		  section = section $0 ORS
-		}
-
-		END {
-		  if (keep) printf "%s", section
-		}
-		' "$1" | sed ':a;/^\n*$/{$d;N;ba}'
-	}
-
-	# If yesterday’s file exists, clean it into today’s
-	if [[ -f "$yesterday_file" ]]; then
-		print_message info "found $yesterday_file"
-		clean_todo "$yesterday_file" >"$today_file"
-	else
-		# Otherwise use the latest file
-		local latest_file=$(ls -t TODO.*.md 2>/dev/null | head -n 1)
-		if [[ -n "$latest_file" ]]; then
-			print_message info "found $latest_file"
-			clean_todo "$latest_file" >"$today_file"
-		else
-			print_message info "No TODO files found. Creating an empty TODO file."
-			touch "$today_file"
-		fi
+	if ! (cd "$src_dir" && TODO_BUILD_DIR="$build_dir" \
+		nim c -d:release --hints:off --outdir:"$build_dir" src/todo.nim); then
+		print_message error "failed to build todo"
+		return 1
 	fi
 
-	nvim "$today_file"
+	install -m 755 "$build_dir/todo" "$bin" || return 1
+	print_message success "installed todo to $bin"
+}
+
+__todo_ensure_binary() {
+	local src_dir="$1" bin="$2"
+
+	# Missing binary: first run.
+	[[ -x "$bin" ]] || { __todo_build "$src_dir" "$bin"; return $?; }
+
+	# Stale binary: any source file newer than it. -quit stops at the first
+	# hit, so this is a couple of stat calls in the common case.
+	if [[ -n "$(find "$src_dir/src" "$src_dir/todo.nimble" "$src_dir/config.nims" \
+		-type f -newer "$bin" -print -quit 2>/dev/null)" ]]; then
+		__todo_build "$src_dir" "$bin"
+		return $?
+	fi
+
+	return 0
+}
+
+todo() {
+	local bin="$HOME/.local/bin/todo"
+	local src_dir="$HOME/.dotfiles/scripts/todo"
+
+	__todo_ensure_binary "$src_dir" "$bin" || return 1
+
+	"$bin" "$@"
+	local status=$?
+
+	# The old Bash implementation cd'd into the todos directory and left the
+	# shell there. A compiled binary cannot change its parent's cwd, so the
+	# side effect is reproduced here.
+	cd "$HOME/lab/temp/todos" 2>/dev/null
+
+	return $status
 }
 
 unalias ll 2>/dev/null

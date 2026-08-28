@@ -1,6 +1,6 @@
 local M = {}
 
--- Function to copy the current file's relative path to CopyQ
+-- Function to copy the current file's relative path to the system clipboard
 function M.copy_relative_path_to_clipboard()
   -- Get the current file's absolute path
   local absolute_path = vim.fn.expand "%:p"

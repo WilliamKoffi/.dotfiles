@@ -1,0 +1,8 @@
+# Build artifacts -- this repository is public, never commit a binary.
+/todo
+/tests/test_*
+!/tests/test_*.nim
+nimcache/
+*.o
+*.out
+*.exe
