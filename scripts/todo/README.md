@@ -14,8 +14,14 @@ Working directory is `~/lab/temp/todos`, created if missing. Today's file is
 1. If today's file exists, open it and stop.
 2. Otherwise seed it from yesterday's file; failing that from the most recent
    `TODO.YYYYMMDD.md` older than today; failing that create it empty.
-3. Archive old TODO files and harvest completed detail work (below).
-4. Open the result in `nvim`.
+3. If the seed removed nothing, the source is **renamed** to today's name
+   instead of copied (below).
+4. Archive old TODO files and harvest completed detail work (below).
+5. Open the result in `nvim`, with the todos directory as the working
+   directory.
+
+`--dry-run` reports every step without writing anything — no directory, no
+seeded file, no archive — and does not open the editor.
 
 ## Extraction
 
@@ -38,6 +44,19 @@ tab- and four-space-nested children behave alike. `- []` (no space between the
 brackets) is a note, not a task, which is how the existing files use it.
 Everything that survives keeps its original text, indentation and order;
 nothing is reformatted.
+
+### Days where nothing was completed
+
+If extraction removes nothing, today's file would be a byte-for-byte copy of
+the source: that is the same list continuing, not a new day. The source is
+renamed to today's name rather than copied, so a quiet week leaves one file
+instead of seven identical ones and `archives/` only ever receives states that
+actually differ. The date on the file therefore reads as *the day this list was
+last carried forward*, and the number of days it sat untouched is not recorded.
+
+Renaming still normalises: `extract()` trims trailing blank lines, so the
+carried-forward file is rewritten when its render differs from the source even
+though no task was removed.
 
 ### Legacy: `clean.nim`
 
@@ -113,9 +132,13 @@ implementation. It compiles and installs the binary when
   (`find -newer -print -quit`, so a couple of stat calls in the common case).
 
 Otherwise it hands straight over to the binary — there is no compilation on a
-normal invocation. The function also `cd`s into the todos directory afterwards,
-reproducing a side effect of the old implementation that a compiled binary
-cannot provide on its own.
+normal invocation.
+
+The binary `cd`s into the todos directory before opening the editor, so `nvim`
+starts with the workspace as its working directory (this is what makes `:e
+details/...` and fuzzy-finding work) and `--dir` is honoured. A child process
+cannot change its parent's cwd, so the function `cd`s as well afterwards, which
+leaves the *shell* in the todos directory as the old implementation did.
 
 Build artifacts go to `$XDG_CACHE_HOME/todo-build` (`config.nims` forces
 `--outdir` there, so even a bare `nim c src/todo.nim` inside the repository
@@ -127,7 +150,7 @@ and `scripts/.stow-local-ignore` stops stow from symlinking this directory into
 
 ```
 todo                      # the daily flow
-todo --dry-run --no-edit  # show what archiving would do
+todo --dry-run            # show what a run would do, changing nothing
 todo --dir <path>         # operate on another todos directory
 todo --today YYYYMMDD     # override today's date
 todo --no-archive         # skip archiving and harvesting
