@@ -20,5 +20,6 @@
   },
   "effortLevel": "high",
   "tui": "fullscreen",
-  "theme": "dark-daltonized"
+  "theme": "dark-daltonized",
+  "agentPushNotifEnabled": true
 }
