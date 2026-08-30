@@ -52,13 +52,25 @@ todo() {
 
 	__todo_ensure_binary "$src_dir" "$bin" || return 1
 
+	# --help and --version answer a question and run nothing; moving the
+	# shell out from under someone who only asked for the usage text is a
+	# surprise, so those invocations leave the cwd alone.
+	local arg query=0
+	for arg in "$@"; do
+		case "$arg" in
+		-h | --help | -v | --version) query=1 ;;
+		esac
+	done
+
 	"$bin" "$@"
 	local status=$?
 
-	# The old Bash implementation cd'd into the todos directory and left the
-	# shell there. A compiled binary cannot change its parent's cwd, so the
-	# side effect is reproduced here.
-	cd "$HOME/lab/temp/todos" 2>/dev/null
+	# The binary chdir's into the todos directory itself, so the editor opens
+	# there. That cannot reach the parent shell, though, and the old Bash
+	# implementation left the shell in the todos directory too -- hence this.
+	if [[ $query -eq 0 ]]; then
+		cd "$HOME/lab/temp/todos" 2>/dev/null
+	fi
 
 	return $status
 }
