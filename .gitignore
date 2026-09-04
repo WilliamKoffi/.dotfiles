@@ -30,3 +30,10 @@ settings.local.json
 # Browser tab-group state export (personal browsing metadata)
 brave-tabs.json
 
+# Local symlinks / generated binaries
+scripts/.local/bin/rmbg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
