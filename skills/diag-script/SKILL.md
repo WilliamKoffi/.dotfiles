@@ -1,6 +1,6 @@
 ---
 name: diag-script
-description: Write a self-contained diagnostic (or gated fix) bash script to /tmp that the user runs in their own terminal — for anything needing sudo, a real TTY, or a reboot in between. Tees every step live to their terminal and archives per-step logs plus exit codes to a timestamped folder Claude reads back afterward.
+description: Write a self-contained diagnostic (or gated fix) bash script to /tmp that the user runs in their own terminal — for anything needing sudo, a real TTY, or a reboot in between. Tees every step live to their terminal, notifies the desktop on completion, and archives per-step logs plus exit codes to a timestamped folder Claude reads back afterward.
 argument-hint: [slug] [problem description]
 disable-model-invocation: true
 allowed-tools: Write, Read, Bash(chmod:*), Bash(ls:*)
@@ -33,6 +33,23 @@ set -uo pipefail
 MODE="${MODE:-diag}"                      # diag (default) | fix
 BASE=/tmp/<slug>
 OUT="$BASE/$(date +%Y%m%d-%H%M%S)"
+
+notify_user() {
+  local exit_code=$?
+  local title="<slug> ($MODE)"
+  local msg="Run finished with exit code $exit_code. Logs: $OUT"
+
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "$title" "$msg"
+    return
+  fi
+
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e "display notification \"$msg\" with title \"$title\""
+    return
+  fi
+}
+trap notify_user EXIT
 
 # refuse a pre-existing dir we don't own (sticky /tmp hazard)
 [ -e "$BASE" ] && [ ! -O "$BASE" ] && { echo "$BASE not owned by $USER"; exit 1; }
@@ -72,11 +89,13 @@ Rules:
 - Idempotent and re-runnable.
 - Never log secrets: no bare `env`, no `.env`, no private keys, no
   `journalctl` greps likely to surface tokens. Redact at the source.
+- OS Notification on exit: Always include a `trap notify_user EXIT` function
+  using early returns (`notify-send` for Linux, `osascript` for macOS) to notify
+  the user when the script finishes, whether it succeeds or fails.
 
 ## Handoff
 
-Primary — the user runs it in their own terminal (this is the only path
-that survives a sudo password prompt):
+The user runs it in their own terminal:
 
 ```
 bash /tmp/<slug>.sh
@@ -84,12 +103,7 @@ bash /tmp/<slug>.sh
 
 `bash <path>`, not `./<path>` — `/tmp` is `noexec` on hardened systems.
 
-Secondary — `! bash /tmp/<slug>.sh` lands output directly in the
-conversation, but only works if sudo is NOPASSWD or already cached.
-Offer it as an option, don't assume it.
-
-Claude never runs the script itself when it needs sudo: it hangs or fails
-silently on a prompt Claude can't answer.
+**Execution rule:** The LLM must **never** run or execute the script itself, even if `sudo` is not required, even if there are no privileged commands, or even if passwordless `sudo` is configured. The script must always be executed by the user in their own terminal.
 
 ## Read-back
 
