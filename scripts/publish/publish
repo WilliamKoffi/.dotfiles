@@ -1,0 +1,24 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "python-docx>=1.2.0",
+#     "markdown>=3.6",
+#     "weasyprint>=69.0",
+#     "beautifulsoup4>=4.12.0",
+#     "pygments>=2.17.0",
+# ]
+# ///
+import sys
+from pathlib import Path
+
+# Ensure src/ package directory is on Python search path
+SCRIPT_DIR = Path(__file__).resolve().parent
+SRC_DIR = SCRIPT_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from cli import run
+
+if __name__ == "__main__":
+    run()

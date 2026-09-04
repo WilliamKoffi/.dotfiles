@@ -1,3 +1,6 @@
-# Nim source for the `todo` binary: built and installed to ~/.local/bin by
-# the bootstrap in bash/.config/bash/functions.sh, never symlinked into $HOME.
+# Source directories for custom CLI utilities (todo, rmbg, publish):
+# Executables are linked into ~/.local/bin, never symlinked into $HOME root.
 ^/todo$
+^/rmbg$
+^/publish$
+

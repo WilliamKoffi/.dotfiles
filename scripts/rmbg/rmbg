@@ -1,0 +1,495 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "rembg[cpu]>=2.0.50",
+#     "pillow>=10.0.0",
+# ]
+# ///
+"""
+rmbg: AI-powered image background removal CLI tool.
+Runs seamlessly with `uv` self-contained dependency management.
+"""
+
+import argparse
+import os
+import sys
+import time
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+VERSION = "1.0.0"
+SUPPORTED_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".bmp",
+    ".tiff",
+    ".tif",
+    ".gif",
+}
+AVAILABLE_MODELS = [
+    "u2net",
+    "u2netp",
+    "u2net_human_seg",
+    "u2net_cloth_seg",
+    "isnet-general-use",
+    "isnet-anime",
+    "birefnet-general",
+    "sam",
+]
+
+
+class Colors:
+    BLUE = "\033[0;34m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    RED = "\033[0;31m"
+    BOLD = "\033[1m"
+    RESET = "\033[0m"
+
+
+def log_info(msg: str, quiet: bool = False) -> None:
+    if quiet:
+        return
+    print(f"{Colors.BLUE}INFO:{Colors.RESET}      {msg}")
+
+
+def log_success(msg: str, quiet: bool = False) -> None:
+    if quiet:
+        return
+    print(f"{Colors.GREEN}SUCCESS:{Colors.RESET}   {msg}")
+
+
+def log_warning(msg: str, quiet: bool = False) -> None:
+    if quiet:
+        return
+    print(f"{Colors.YELLOW}WARNING:{Colors.RESET}   {msg}")
+
+
+def log_error(msg: str) -> None:
+    print(f"{Colors.RED}ERROR:{Colors.RESET}     {msg}", file=sys.stderr)
+
+
+def parse_bgcolor(color_str: Optional[str]) -> Optional[Tuple[int, ...]]:
+    """Parse color strings into RGBA or RGB tuples."""
+    if not color_str:
+        return None
+
+    s = color_str.strip()
+
+    # Named basic colors
+    named_colors = {
+        "white": (255, 255, 255, 255),
+        "black": (0, 0, 0, 255),
+        "red": (255, 0, 0, 255),
+        "green": (0, 255, 0, 255),
+        "blue": (0, 0, 255, 255),
+        "yellow": (255, 255, 0, 255),
+        "magenta": (255, 0, 255, 255),
+        "cyan": (0, 255, 255, 255),
+        "transparent": (0, 0, 0, 0),
+    }
+    if s.lower() in named_colors:
+        return named_colors[s.lower()]
+
+    # Hex format: #RGB, #RGBA, #RRGGBB, #RRGGBBAA
+    if s.startswith("#"):
+        hex_val = s.lstrip("#")
+        if len(hex_val) == 3:  # #RGB
+            return tuple(int(c * 2, 16) for c in hex_val) + (255,)
+        if len(hex_val) == 4:  # #RGBA
+            return tuple(int(c * 2, 16) for c in hex_val)
+        if len(hex_val) == 6:  # #RRGGBB
+            return (
+                int(hex_val[0:2], 16),
+                int(hex_val[2:4], 16),
+                int(hex_val[4:6], 16),
+                255,
+            )
+        if len(hex_val) == 8:  # #RRGGBBAA
+            return (
+                int(hex_val[0:2], 16),
+                int(hex_val[2:4], 16),
+                int(hex_val[4:6], 16),
+                int(hex_val[6:8], 16),
+            )
+        raise ValueError(f"Invalid hex color: '{color_str}'")
+
+    # Comma-separated: "255,255,255" or "255,255,255,255"
+    if "," in s:
+        parts = [int(p.strip()) for p in s.split(",")]
+        if len(parts) in (3, 4):
+            return tuple(parts)
+        raise ValueError(
+            f"Color tuple must have 3 (RGB) or 4 (RGBA) values, got {len(parts)}"
+        )
+
+    raise ValueError(
+        f"Unrecognized color format '{color_str}'. Use hex ('#ffffff'), comma separated ('255,255,255'), or color name ('white')."
+    )
+
+
+def collect_images_from_dir(dir_path: Path, recursive: bool = False) -> List[Path]:
+    """Find all supported image files in a directory."""
+    if not dir_path.is_dir():
+        return []
+
+    pattern = "**/*" if recursive else "*"
+    images = []
+    for item in dir_path.glob(pattern):
+        if item.is_file() and item.suffix.lower() in SUPPORTED_EXTENSIONS:
+            # Skip output files already generated previously
+            if not item.stem.endswith("_nobg"):
+                images.append(item)
+    return sorted(images)
+
+
+def determine_output_path(
+    src_path: Path, output_arg: Optional[Path], is_batch: bool
+) -> Path:
+    """Determine the destination output path, guaranteeing a transparency-friendly format."""
+    # Case 1: Output argument specified as a directory
+    if output_arg and (output_arg.is_dir() or (is_batch and not output_arg.suffix)):
+        output_arg.mkdir(parents=True, exist_ok=True)
+        return output_arg / f"{src_path.stem}_nobg.png"
+
+    # Case 2: Output argument specified as a single file
+    if output_arg and not is_batch:
+        if output_arg.suffix.lower() not in (".png", ".webp"):
+            # Ensure .png extension if none or incompatible
+            return output_arg.with_suffix(".png")
+        return output_arg
+
+    # Case 3: Default next to input image
+    return src_path.parent / f"{src_path.stem}_nobg.png"
+
+
+def build_work_list(
+    inputs: List[str],
+    output_arg: Optional[str],
+    directory: Optional[str],
+    recursive: bool,
+) -> List[Tuple[Path, Path]]:
+    """Build list of (source_path, target_path) pairs to process."""
+    src_paths: List[Path] = []
+
+    # Process explicit --dir argument
+    if directory:
+        dir_path = Path(directory).expanduser().resolve()
+        if not dir_path.exists():
+            log_error(f"Directory not found: {dir_path}")
+            return []
+        src_paths.extend(collect_images_from_dir(dir_path, recursive=recursive))
+
+    # Process positional inputs
+    for item in inputs:
+        path = Path(item).expanduser().resolve()
+        if path.is_dir():
+            src_paths.extend(collect_images_from_dir(path, recursive=recursive))
+        elif path.is_file():
+            if path.suffix.lower() in SUPPORTED_EXTENSIONS:
+                src_paths.append(path)
+            else:
+                log_warning(f"Skipping unsupported file type: {path.name}")
+        else:
+            log_error(f"Input path not found: {path}")
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_src_paths = []
+    for p in src_paths:
+        if p not in seen:
+            seen.add(p)
+            unique_src_paths.append(p)
+
+    if not unique_src_paths:
+        return []
+
+    is_batch = len(unique_src_paths) > 1
+    out_path = Path(output_arg).expanduser().resolve() if output_arg else None
+
+    work_list = []
+    for src in unique_src_paths:
+        dst = determine_output_path(src, out_path, is_batch)
+        work_list.append((src, dst))
+
+    return work_list
+
+
+def process_image(
+    src: Path,
+    dst: Path,
+    session,
+    options: argparse.Namespace,
+    bgcolor_tuple: Optional[Tuple[int, ...]],
+) -> bool:
+    """Process a single image through rembg."""
+    from PIL import Image
+    from rembg import remove
+
+    try:
+        with Image.open(src) as input_image:
+            # Convert palette/grayscale modes if needed
+            if input_image.mode not in ("RGB", "RGBA"):
+                input_image = input_image.convert("RGB")
+
+            kwargs = {
+                "session": session,
+                "only_mask": options.only_mask,
+                "post_process_mask": options.post_process_mask,
+                "alpha_matting": options.alpha_matting,
+                "alpha_matting_foreground_threshold": options.alpha_matting_foreground_threshold,
+                "alpha_matting_background_threshold": options.alpha_matting_background_threshold,
+                "alpha_matting_erode_size": options.alpha_matting_erode_size,
+            }
+            if bgcolor_tuple:
+                kwargs["bgcolor"] = bgcolor_tuple
+
+            output_image = remove(input_image, **kwargs)
+
+            # Ensure parent directory exists
+            dst.parent.mkdir(parents=True, exist_ok=True)
+
+            # Save result (PNG format to preserve alpha transparency)
+            fmt = "WEBP" if dst.suffix.lower() == ".webp" else "PNG"
+            output_image.save(dst, format=fmt)
+            return True
+
+    except Exception as err:
+        log_error(f"Failed processing '{src.name}': {err}")
+        return False
+
+
+def create_arg_parser() -> argparse.ArgumentParser:
+    """Create and configure command-line argument parser."""
+    parser = argparse.ArgumentParser(
+        prog="rmbg",
+        description="AI-powered background removal tool using Rembg and uv.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Remove background of a single image
+  rmbg photo.jpg
+
+  # Specify custom output path
+  rmbg photo.jpg -o transparent.png
+
+  # Process multiple images into an output folder
+  rmbg *.jpg -o ./output_folder/
+
+  # Process an entire directory
+  rmbg --dir ./my_photos -o ./cleaned_photos
+
+  # Use alpha-matting for fine hair/fur details
+  rmbg portrait.jpg -a
+
+  # Replace background with solid white
+  rmbg portrait.jpg --bgcolor white
+
+  # Use a specific AI model (e.g. anime or faster model)
+  rmbg anime.png -m isnet-anime
+  rmbg photo.jpg -m u2netp
+""",
+    )
+
+    parser.add_argument(
+        "inputs",
+        nargs="*",
+        help="Input image file(s) or directories to process.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        help="Output file path (single image) or directory (multiple images).",
+    )
+    parser.add_argument(
+        "-d",
+        "--dir",
+        dest="directory",
+        help="Process all images inside this directory.",
+    )
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Scan directories recursively for images.",
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        default="u2net",
+        choices=AVAILABLE_MODELS,
+        help="AI model to use (default: u2net). Options: "
+        + ", ".join(AVAILABLE_MODELS),
+    )
+    parser.add_argument(
+        "-a",
+        "--alpha-matting",
+        action="store_true",
+        help="Enable alpha matting for higher quality edge cutouts (e.g. hair).",
+    )
+    parser.add_argument(
+        "--af",
+        "--alpha-matting-foreground-threshold",
+        dest="alpha_matting_foreground_threshold",
+        type=int,
+        default=240,
+        help="Alpha matting foreground threshold (0-255, default: 240).",
+    )
+    parser.add_argument(
+        "--ab",
+        "--alpha-matting-background-threshold",
+        dest="alpha_matting_background_threshold",
+        type=int,
+        default=10,
+        help="Alpha matting background threshold (0-255, default: 10).",
+    )
+    parser.add_argument(
+        "--ae",
+        "--alpha-matting-erode-size",
+        dest="alpha_matting_erode_size",
+        type=int,
+        default=10,
+        help="Alpha matting erode size (default: 10).",
+    )
+    parser.add_argument(
+        "--post-process-mask",
+        action="store_true",
+        help="Post-process mask to clean up small holes and artifacts.",
+    )
+    parser.add_argument(
+        "--only-mask",
+        action="store_true",
+        help="Output only the binary mask instead of the cutout image.",
+    )
+    parser.add_argument(
+        "--bgcolor",
+        help="Solid background color to fill instead of transparency (e.g., 'white', '#ffffff', '255,255,255').",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        "--overwrite",
+        action="store_true",
+        dest="overwrite",
+        help="Overwrite existing output files without prompting.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what files would be processed and where output will be saved without running inference.",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Suppress non-error messages.",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Display detailed progress and elapsed execution time.",
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}",
+    )
+
+    return parser
+
+
+def main() -> int:
+    parser = create_arg_parser()
+    args = parser.parse_args()
+
+    if not args.inputs and not args.directory:
+        parser.print_help()
+        return 1
+
+    try:
+        bgcolor_tuple = parse_bgcolor(args.bgcolor)
+    except ValueError as err:
+        log_error(str(err))
+        return 1
+
+    work_list = build_work_list(
+        inputs=args.inputs,
+        output_arg=args.output,
+        directory=args.directory,
+        recursive=args.recursive,
+    )
+
+    if not work_list:
+        log_error("No valid image files found to process.")
+        return 1
+
+    if args.dry_run:
+        log_info(f"Dry run: {len(work_list)} image(s) queued for processing.")
+        for idx, (src, dst) in enumerate(work_list, start=1):
+            print(f"  [{idx}/{len(work_list)}] {src} -> {dst}")
+        return 0
+
+    log_info(
+        f"Processing {len(work_list)} image(s) using model '{args.model}'...",
+        quiet=args.quiet,
+    )
+
+    # Initialize rembg session once for the entire batch
+    init_start = time.time()
+    try:
+        from rembg import new_session
+
+        session = new_session(args.model)
+    except Exception as err:
+        log_error(f"Failed to initialize Rembg model '{args.model}': {err}")
+        return 1
+
+    if args.verbose:
+        log_info(
+            f"Model '{args.model}' loaded in {time.time() - init_start:.2f}s",
+            quiet=args.quiet,
+        )
+
+    success_count = 0
+    total_count = len(work_list)
+
+    for idx, (src, dst) in enumerate(work_list, start=1):
+        if dst.exists() and not args.overwrite:
+            log_warning(
+                f"[{idx}/{total_count}] Output exists, skipping: '{dst.name}' (use -f/--overwrite to replace)",
+                quiet=args.quiet,
+            )
+            continue
+
+        item_start = time.time()
+        if not args.quiet:
+            print(
+                f"[{idx}/{total_count}] Processing '{src.name}' -> '{dst.name}'...",
+                end="\r",
+                flush=True,
+            )
+
+        ok = process_image(src, dst, session, args, bgcolor_tuple)
+        duration = time.time() - item_start
+
+        if ok:
+            success_count += 1
+            if not args.quiet:
+                time_str = f" ({duration:.2f}s)" if args.verbose else ""
+                log_success(f"[{idx}/{total_count}] Saved: {dst}{time_str}")
+
+    log_info(
+        f"Done! Successfully processed {success_count}/{total_count} images.",
+        quiet=args.quiet,
+    )
+    return 0 if success_count > 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
