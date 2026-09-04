@@ -35,7 +35,6 @@ nixpkgs#luajit
 nixpkgs#asdf-vm
 nixpkgs#uv
 nixpkgs#bun
-nixpkgs#pnpm
 
 # dev - build tools
 nixpkgs#cmake
@@ -72,7 +71,6 @@ nixpkgs#helix
 nixpkgs#zed-editor
 nixpkgs#antigravity-ide
 nixpkgs#opencode
-nixpkgs#crush
 
 # browsers
 nixpkgs#brave
@@ -92,3 +90,16 @@ nixpkgs#nerd-fonts.fira-code
 # misc
 nixpkgs#servo
 nixpkgs#mailpit
+
+# uncategorized (new — sort me)
+github:herdrdev/herdr/v0.8.0#default
+nixpkgs#cloudflared
+nixpkgs#lxterminal
+nixpkgs#lynis
+nixpkgs#nim
+nixpkgs#nimble
+nixpkgs#pixi
+nixpkgs#scc
+nixpkgs#tokei
+nixpkgs#tree-sitter
+nixpkgs#universal-ctags
