@@ -35,12 +35,15 @@ nixpkgs#luajit
 nixpkgs#asdf-vm
 nixpkgs#uv
 nixpkgs#bun
+nixpkgs#dart
+nixpkgs#flutter
 
 # dev - build tools
 nixpkgs#cmake
 nixpkgs#meson
 nixpkgs#ninja
 nixpkgs#protobuf
+nixpkgs#gradle_9
 
 # dev - cli utilities
 nixpkgs#ripgrep
@@ -98,8 +101,10 @@ nixpkgs#lxterminal
 nixpkgs#lynis
 nixpkgs#nim
 nixpkgs#nimble
-nixpkgs#pixi
 nixpkgs#scc
 nixpkgs#tokei
 nixpkgs#tree-sitter
 nixpkgs#universal-ctags
+
+# uncategorized (new — sort me)
+nixpkgs#devenv
