@@ -67,14 +67,15 @@ func visualIndent(line: string): int =
     else: return
 
 func headerDepth(line: string): int =
-  ## `^#+ ` at column zero. Any depth; markdown's limit of six is not enforced
+  ## `^ *#+ ` at any indent. Any depth; markdown's limit of six is not enforced
   ## because the documents are ours, not a renderer's.
-  var i = 0
+  let offset = firstNonSpace(line)
+  var i = offset
   while i < line.len and line[i] == '#':
     inc i
-  if i == 0 or i >= line.len or line[i] != ' ':
+  if i == offset or i >= line.len or line[i] != ' ':
     return 0
-  i
+  i - offset
 
 func taskMarker(line: string, offset: int): char =
   ## The character between the brackets of `- [?]`, or '\0' when this is not a
@@ -94,10 +95,10 @@ func isBlank(line: string): bool =
 # --- parsing --------------------------------------------------------------
 
 proc parse*(content: string): Node =
-  ## Single pass. Sections nest by header depth, tasks by visual indent, and a
-  ## note indented past the open task belongs to that task's subtree -- which
-  ## is what keeps continuation lines like `  - Monitor notifications` with
-  ## the item they describe.
+  ## Single pass. Sections nest by header depth and indentation, tasks by visual
+  ## indent, and a note indented past the open task belongs to that task's
+  ## subtree -- which is what keeps continuation lines like
+  ## `  - Monitor notifications` with the item they describe.
   result = Node(kind: nkDocument)
   var
     sections = @[result] ## innermost section last; the document is the root
@@ -111,23 +112,32 @@ proc parse*(content: string): Node =
       blankRun = true
       continue
 
-    let depth = headerDepth(line)
+    let
+      offset = firstNonSpace(line)
+      indent = visualIndent(line)
+      depth = headerDepth(line)
+
+    # A line at an earlier indent closes any section scoped to a deeper indent,
+    # and a section at the same indent closes sections of equal or greater depth.
+    while sections.len > 1 and (sections[^1].indent > indent or
+          (depth > 0 and sections[^1].indent == indent and sections[^1].depth >= depth)):
+      discard sections.pop()
+      tasks.setLen(0)
+
     if depth > 0:
-      while sections.len > 1 and sections[^1].depth >= depth:
-        discard sections.pop()
-      let node = Node(kind: nkSection, line: line, depth: depth,
+      let node = Node(kind: nkSection, line: line, depth: depth, indent: indent,
                       blankBefore: blankRun)
-      sections[^1].children.add(node)
+      if tasks.len > 0 and tasks[^1].indent < indent:
+        tasks[^1].children.add(node)
+      else:
+        sections[^1].children.add(node)
       sections.add(node)
       tasks.setLen(0)
       last = node
       blankRun = false
       continue
 
-    let
-      offset = firstNonSpace(line)
-      indent = visualIndent(line)
-      marker = taskMarker(line, offset)
+    let marker = taskMarker(line, offset)
 
     while tasks.len > 0 and tasks[^1].indent >= indent:
       discard tasks.pop()

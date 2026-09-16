@@ -158,6 +158,52 @@ suite "section collapsing":
     check extract(md("## s", "a note", "- [x] done")).remaining ==
           md("## s", "a note")
 
+  test "an indented section under a task collapses and is extracted when its tasks complete":
+    let input = md(
+      "## TODOs",
+      "- [ ] api:",
+      "    - [ ] keep",
+      "    ### Later",
+      "    - [x] done",
+      "- [ ] web:",
+      "    - [ ] keep2",
+    )
+    let r = extract(input)
+    check r.remaining == md(
+      "## TODOs",
+      "- [ ] api:",
+      "    - [ ] keep",
+      "- [ ] web:",
+      "    - [ ] keep2",
+    )
+    check r.extracted == md(
+      "    ### Later",
+      "    - [x] done",
+    )
+
+  test "an indented section under a task survives if any task under it remains":
+    let input = md(
+      "## TODOs",
+      "- [ ] api:",
+      "    - [ ] keep",
+      "    ### Later",
+      "    - [x] done",
+      "    - [ ] later keep",
+      "- [ ] web:",
+    )
+    let r = extract(input)
+    check r.remaining == md(
+      "## TODOs",
+      "- [ ] api:",
+      "    - [ ] keep",
+      "    ### Later",
+      "    - [ ] later keep",
+      "- [ ] web:",
+    )
+    check r.extracted == md(
+      "    - [x] done",
+    )
+
 suite "notes and nesting":
 
   test "notes are preserved":
