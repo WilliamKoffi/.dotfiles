@@ -100,6 +100,7 @@ plugins=(
 	zoxide
 	zsh-autosuggestions
 	zsh-syntax-highlighting
+	#ssh-agent
 )
 
 # ─── History Hook ─────────────────────────────────────────────────────────────

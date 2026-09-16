@@ -33,19 +33,9 @@ fi
 # Added by Antigravity CLI installer
 [[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$HOME/.local/bin:$PATH"
 
-# Flutter
-if [ -d "$HOME/.flutter/bin" ]; then
-    [[ ":$PATH:" != *":$HOME/.flutter/bin:"* ]] && export PATH="$PATH:$HOME/.flutter/bin"
-fi
-
 # Go
 if [ -d "$HOME/go/bin" ]; then
     [[ ":$PATH:" != *":$HOME/go/bin:"* ]] && export PATH="$PATH:$HOME/go/bin"
-fi
-
-# Gradle (kept manual: /opt/gradle 9.3.1 is newer than nixpkgs' 8.14.4)
-if [ -d "/opt/gradle/gradle-9.3.1/bin" ]; then
-    [[ ":$PATH:" != *":/opt/gradle/gradle-9.3.1/bin:"* ]] && export PATH="$PATH:/opt/gradle/gradle-9.3.1/bin"
 fi
 
 # pnpm (binary is from Nix; this is only for `pnpm add -g` globals)
