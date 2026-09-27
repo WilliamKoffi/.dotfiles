@@ -27,6 +27,26 @@ declares — they are not vendored here:
 
 Restart. `grain` loads as `grain@skills-dir`; check with `/grain:survey`.
 
+## AI material: `ai/`
+
+Not a stow package. Everything AI that is not a tool's own config lives here:
+
+| Path | Carries |
+|---|---|
+| `ai/skills/<name>/` | The skills (grain, playground, workstation, scaffold…) |
+| `ai/decisions/` | Decisions shared across projects, by system; read by `scaffold` (rules in its `README.md`) |
+
+Skills are linked one by one into each agent's skill folder:
+
+```bash
+for s in ~/.dotfiles/ai/skills/*; do
+  ln -sfn "$s" ~/.claude/skills/"$(basename "$s")"
+  ln -sfn "$s" ~/.gemini/config/skills/"$(basename "$s")"
+done
+```
+
+The `claude`, `gemini` and `qwen` stow packages stay at the root.
+
 ## What the `claude` package carries
 
 | Path | Why |
