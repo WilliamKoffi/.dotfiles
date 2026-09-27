@@ -156,3 +156,7 @@ source "$HOME/.dotfiles/bash/.config/bash/main.sh"
 
 eval "$(undo init zsh)"
 eval "$(atuin init zsh)"
+
+# >>> railway initialize >>>
+source "$HOME/.railway/env"
+# <<< railway initialize <<<
