@@ -1,0 +1,18 @@
+id: nextjs
+title: Next.js App Router, single app
+summary: One Next.js app; server routes and storage live inside it.
+proven_in: [intelli-resume]
+decisions:
+  AGT-001: true
+  AGT-002: true
+  AGT-003: true
+  LNG-001: true
+  LNG-002: false
+  STK-002: true
+  STK-001: false
+  STK-004: true
+  MNY-001: true
+  MNY-003: true
+  PAY-001: true
+  PAY-002: true
+  TST-001: false

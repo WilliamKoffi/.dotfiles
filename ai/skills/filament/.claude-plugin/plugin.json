@@ -1,0 +1,8 @@
+{
+  "name": "filament",
+  "version": "1.0.0",
+  "description": "Filament admin work. split: break an oversized Filament resource into pages, schemas and tables.",
+  "author": {
+    "name": "llyam"
+  }
+}

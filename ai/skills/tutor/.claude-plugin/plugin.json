@@ -1,0 +1,8 @@
+{
+  "name": "tutor",
+  "version": "1.0.0",
+  "description": "Language tutoring. language: correct the grammar of each user message before answering.",
+  "author": {
+    "name": "llyam"
+  }
+}

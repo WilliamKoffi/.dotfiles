@@ -1,0 +1,8 @@
+{
+  "name": "muller",
+  "version": "1.0.0",
+  "description": "Josef Müller-Brockmann's International Typographic Style. grid: build pages on a genuine modular grid.",
+  "author": {
+    "name": "llyam"
+  }
+}
