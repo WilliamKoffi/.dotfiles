@@ -14,6 +14,7 @@ git clone <this-repo> ~/.dotfiles
 mkdir -p ~/.claude/skills
 
 stow -d ~/.dotfiles -t ~ claude
+for s in ~/.dotfiles/ai/skills/*; do ln -sfn "$s" ~/.claude/skills/"$(basename "$s")"; done
 ```
 
 Then, in Claude Code, reinstall the marketplace plugins that `settings.json`
@@ -33,8 +34,22 @@ Not a stow package. Everything AI that is not a tool's own config lives here:
 
 | Path | Carries |
 |---|---|
-| `ai/skills/<name>/` | The skills (grain, playground, workstation, scaffold…) |
-| `ai/decisions/` | Decisions shared across projects, by system; read by `scaffold` (rules in its `README.md`) |
+| `ai/skills/<name>/` | The skills: one action word (`scaffold`, `preflight`, `diagnose`…) or `namespace:action` (`grain:survey`, `filament:split`) |
+| `ai/decisions/` | Reusable conventions, by system (agents, language, stack, database, money, payments, testing…) and by language and framework (`php`, `php/laravel`, `ts/nuxt`) |
+
+### Decisions: pull, don't fetch
+
+`ai/decisions/` is the library a new project starts from, instead of going back to an old
+project to copy what it decided. Each decision is one abstract statement (no project, no
+local id), taken or skipped whole; variants conflict (`STK-001` pnpm ↔ `STK-002` bun).
+Rules, format and register: `ai/decisions/README.md`.
+
+In the new project, run `/scaffold [stack] [target]`. It asks which languages and
+frameworks the project uses (the stack is chosen there, never stored as a decision), then
+which decisions to take per system, and writes full copies into the project's
+`docs/decisions/` plus a `decisions.lock` (stack, base commit, local number → id). The project then reads on its own; it never links back here.
+
+Commit `~/.dotfiles` before scaffolding: the lock pins the base commit.
 
 Skills are linked one by one into each agent's skill folder:
 
@@ -51,9 +66,9 @@ The `claude`, `gemini` and `qwen` stow packages stay at the root.
 
 | Path | Why |
 |---|---|
-+| `.claude/CLAUDE.md` | Global pointer to the grain doctrine. No doctrine inline. |
-+| `.claude/settings.json` | Permissions, model, theme, effort, enabled-plugin list. |
-+| `.claude/skills/grain/` | The grain plugin — doctrine, rulebooks, 11 waves. |
+| `.claude/CLAUDE.md` | Global pointer to the grain doctrine. No doctrine inline. |
+| `.claude/settings.json` | Permissions, model, theme, effort, enabled-plugin list. |
+| `.claude/skills/` | Empty; holds links into `ai/skills/` (grain included), not stowed files. |
 
 Nothing else. Everything else under `~/.claude` is machine state Claude
 regenerates: `plugins/` (187M, installer-managed), `projects/` (43M),
