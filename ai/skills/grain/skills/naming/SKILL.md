@@ -8,13 +8,13 @@ description: >
   (use slice).
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Grep, Glob, Edit
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash(git mv *), Bash(mv *)
 argument-hint: "[chemin]"
 ---
 
 # naming — standalone
 
-Mission: **names only.** No file moves, no method moves, no structural edits.
+Mission: **names only.** No file relocation, no method moves, no structural edits.
 
 This skill is not a wave. It reads no ledger, writes no ledger, and closes no
 findings. It exists so a naming pass can be run on a folder without committing
@@ -36,7 +36,8 @@ precedence decides.
 |------|--------|
 | Identifiers within the scope path | edit |
 | Call sites of any identifier renamed here | edit |
-| Filenames | read — renaming files belongs to `slice` |
+| Filenames within the scope path | rename in place with `git mv`, falling back to `mv` — same directory; relocation belongs to `slice` |
+| Imports and references to a renamed file | edit |
 | `trash/grain/**` | never — no shard, no manifest, no plan |
 
 If a name is wrong because the concept is wrong, stop. A misnamed thing that is
@@ -49,7 +50,10 @@ leave the name alone.
 2. For each identifier, judge it against §2. A name that already complies is
    not a finding — do not pad.
 3. Rename, then update every call site in the same edit pass. Grep the repo for
-   the old name before moving on; an incomplete sweep is a broken build.
+   the old name before moving on; an incomplete sweep is a broken build. A
+   filename (§2.5) is renamed inside its own directory with `git mv`; if git
+   refuses (untracked file, no repository), fall back to `mv`. Then every
+   import and path reference to it is updated the same way.
 4. Preserve behavior exactly — see §5. A rename that would collide with an
    existing name is reported, not forced.
 

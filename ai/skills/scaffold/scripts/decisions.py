@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Read the shared decision base and write the chosen decisions into a project.
 
-  decisions.py archs                              list the architectures
-  decisions.py offer <arch>                       JSON: the arch's decisions, grouped by system
-  decisions.py check <arch> <ID,ID,...>           conflicts and missing requirements, exit 1 if any
-  decisions.py write <arch> <ID,ID,...> <target>  write docs/decisions/ + decisions.lock in <target>
+  decisions.py stacks                                 list the languages and frameworks to choose from
+  decisions.py offer <stack>                          JSON: the decisions offered, grouped by system
+  decisions.py check <ID,ID,...>                      conflicts and missing requirements, exit 1 if any
+  decisions.py write <stack> <ID,ID,...> <target>     write docs/decisions/ + decisions.lock in <target>
+
+<stack> is a comma-separated list of language and framework systems (`php,php/tempest,ts/solid`).
+Generic systems (agents, money, …) are always offered; a framework brings its language along.
 """
 import json
 import subprocess
@@ -15,6 +18,7 @@ from pathlib import Path
 import yaml
 
 BASE = Path.home() / ".dotfiles/ai/decisions"
+SYSTEMS = BASE / "systems"
 
 
 def fail(message):
@@ -29,17 +33,46 @@ def split(path):
 
 def catalog():
     decisions = {}
-    for path in sorted((BASE / "systems").rglob("*.md")):
+    for path in sorted(SYSTEMS.rglob("*.md")):
         meta, body = split(path)
         decisions[meta["id"]] = {**meta, "body": body, "path": str(path.relative_to(BASE))}
     return decisions
 
 
-def arch(name):
-    path = BASE / "archs" / f"{name}.yaml"
-    if not path.exists():
-        fail(f"unknown arch: {name}")
-    return yaml.safe_load(path.read_text())
+def languages():
+    """A language is a top-level system folder that holds framework folders."""
+    return sorted(p.name for p in SYSTEMS.iterdir() if p.is_dir() and any(c.is_dir() for c in p.iterdir()))
+
+
+def choosable():
+    found = []
+    for language in languages():
+        found.append(language)
+        found += sorted(f"{language}/{p.name}" for p in (SYSTEMS / language).iterdir() if p.is_dir())
+    return found
+
+
+def resolve(stack):
+    known, chosen = choosable(), set()
+    for system in stack:
+        if system not in known:
+            fail(f"unknown language or framework: {system} (see `decisions.py stacks`)")
+        chosen.add(system)
+        chosen.add(system.split("/")[0])
+    return chosen
+
+
+def live(item):
+    return not item["status"].startswith(("superseded", "retired"))
+
+
+def ordered(stack):
+    """Generic systems first, then the chosen languages and frameworks; ids in order within each."""
+    chosen, langs = resolve(stack), languages()
+    items = [item for item in catalog().values()
+             if live(item) and (item["system"].split("/")[0] not in langs or item["system"] in chosen)]
+    return sorted(items, key=lambda i: (i["system"].split("/")[0] in langs, i["system"],
+                                        int(i["id"].rsplit("-", 1)[1])))
 
 
 def base_commit():
@@ -48,22 +81,20 @@ def base_commit():
     return run.stdout.strip() or "uncommitted"
 
 
-def archs():
-    for path in sorted((BASE / "archs").glob("*.yaml")):
-        data = yaml.safe_load(path.read_text())
-        print(f"{data['id']}\t{data['title']}\tproven in: {', '.join(data.get('proven_in', []))}")
+def stacks():
+    counts = {}
+    for item in filter(live, catalog().values()):
+        counts[item["system"]] = counts.get(item["system"], 0) + 1
+    for system in choosable():
+        print(f"{system}\t{counts.get(system, 0)} decisions")
 
 
-def offer(name):
-    decisions, groups = catalog(), {}
-    for id_, checked in arch(name)["decisions"].items():
-        item = decisions[id_]
-        if item["status"].startswith(("superseded", "retired")):
-            continue
+def offer(stack):
+    groups = {}
+    for item in ordered(stack):
         groups.setdefault(item["system"], []).append({
-            "id": id_, "title": item["title"], "checked": checked, "status": item["status"],
+            "id": item["id"], "title": item["title"], "status": item["status"],
             "conflicts": item["conflicts"], "requires": item["requires"],
-            "proven_in": item["proven_in"],
         })
     print(json.dumps(groups, indent=2, ensure_ascii=False))
 
@@ -89,16 +120,20 @@ def slug(path):
     return path.split("/")[-1].removesuffix(".md").split("-", 2)[2]
 
 
-def write(name, chosen, target):
+def write(stack, chosen, target):
     if found := problems(chosen):
         fail("\n".join(found))
+    order = [item["id"] for item in ordered(stack)]
+    if outside := [id_ for id_ in chosen if id_ not in order]:
+        fail(f"not offered for this stack: {', '.join(outside)}")
     folder = Path(target) / "docs/decisions"
     if folder.exists() and any(folder.glob("[0-9][0-9][0-9]-*.md")):
         fail(f"{folder} already holds decisions; adopt one by one instead")
     folder.mkdir(parents=True, exist_ok=True)
     decisions, commit, today = catalog(), base_commit(), date.today().isoformat()
-    rows, lock = [], {"arch": name, "base": str(BASE), "commit": commit, "date": today, "decisions": []}
-    for number, id_ in enumerate(chosen, start=1):
+    lock = {"stack": sorted(resolve(stack)), "base": str(BASE), "commit": commit, "date": today, "decisions": []}
+    rows = []
+    for number, id_ in enumerate(sorted(chosen, key=order.index), start=1):
         item = decisions[id_]
         local = f"{number:03d}"
         body = item["body"].split("\n", 1)[1].strip()  # drop the shared "# ID — title" line
@@ -106,7 +141,7 @@ def write(name, chosen, target):
             f"# {local} — {item['title']}\n\n"
             f"- **Status:** {item['status']}\n"
             f"- **Date:** {today}\n"
-            f"- **Source:** ai/decisions {id_}@{commit} (proven in: {'; '.join(item['proven_in'])})\n\n"
+            f"- **Source:** ai/decisions {id_}@{commit}\n\n"
             f"{body}\n")
         rows.append(f"| {local} | [{item['title']}]({local}-{slug(item['path'])}.md) | {item['status']} | {id_}@{commit} |")
         lock["decisions"].append({"local": local, "id": id_})
@@ -126,7 +161,7 @@ Why this project is the way it is. One file per decision: `NNN-<slug>.md`.
 - Every decision names its `Source`: a shared decision (`ai/decisions <ID>@<commit>`), a file and line, a commit,
   or the user and a date.
 - Check this register before any structural choice.
-- `decisions.lock` at the root records which shared decisions were taken, at which commit.
+- `decisions.lock` at the root records the stack chosen and which shared decisions were taken, at which commit.
 
 ## Format
 
@@ -151,16 +186,20 @@ Why this project is the way it is. One file per decision: `NNN-<slug>.md`.
 """
 
 
+def stack_arg(value):
+    return [s for s in value.split(",") if s]
+
+
 def main(args):
     match args:
-        case ["archs"]:
-            archs()
-        case ["offer", name]:
-            offer(name)
-        case ["check", _, ids]:
+        case ["stacks"]:
+            stacks()
+        case ["offer", stack]:
+            offer(stack_arg(stack))
+        case ["check", ids]:
             check(ids.split(","))
-        case ["write", name, ids, target]:
-            write(name, ids.split(","), target)
+        case ["write", stack, ids, target]:
+            write(stack_arg(stack), ids.split(","), target)
         case _:
             fail(__doc__)
 

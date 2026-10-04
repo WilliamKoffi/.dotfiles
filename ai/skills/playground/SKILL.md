@@ -1,7 +1,7 @@
 ---
 name: playground
-description: Create or update a playground under trash/playground/<ctx>/ — a gitignored folder of notes that tracks one piece of work (a refactor, review, audit, diagnostic or design exploration) and is registered in trash/playground/README.md.
-argument-hint: [ctx_slug] [what the playground tracks]
+description: Create or update a playground under trash/playground/<ctx>/ — a gitignored folder of notes that tracks one piece of work (a refactor, review, audit, diagnostic or design exploration) and is registered in trash/playground/README.md. `load <ctx>` reads one back into the session to continue the work.
+argument-hint: [ctx_slug] [what the playground tracks] | load [ctx_slug]
 disable-model-invocation: true
 ---
 
@@ -11,6 +11,8 @@ Records the work of this session (or the topic in `$ARGUMENTS`) as notes under
 `trash/playground/<ctx>/`, so a later session can pick it up cold.
 
 `trash/` is gitignored. Never `git add` a playground, and never commit on its behalf.
+
+First argument is `load` → skip to [Load](#load). Otherwise steps 1–4 (or 5).
 
 ## 1. Resolve the context
 
@@ -73,6 +75,33 @@ Label: `View Tracker` (tracker, phased), `View Report` (report), `View Patterns`
   answered since. A wrong note is worse than a missing one.
 - Refresh the README summary and the index row.
 
+## Load
+
+`/playground load [ctx]` brings a playground back into the session so the
+brainstorm continues where it stopped. Read-only until the user moves the work on.
+
+1. **Find it.** Read `trash/playground/README.md`.
+   - `ctx` given and `trash/playground/<ctx>/` exists → use it.
+   - `ctx` given but no exact folder → match it against the index slugs and titles;
+     one match → use it and say so; several → list them and ask.
+   - No `ctx` → list the index rows, most recently modified folder first
+     (`ls -t trash/playground/`), and ask which one.
+2. **Read everything** in the folder: `README.md` first, then every other note in
+   index order. Skip `screenshots/` contents; note they exist.
+3. **Check for drift.** Spot-check the paths, classes and skills the notes cite
+   against the working tree (`ls`, `grep`, `git log --since=<last log date>`).
+   List what no longer matches; don't fix the notes yet.
+4. **Brief the user**, short:
+   - context, shape, and the date of the last `log.md` entry (or the folder's mtime);
+   - where it stands: the README summary in 2–4 bullets;
+   - what's open: `## Open` items, events **waiting on the user**, unanswered questions;
+   - drift found in step 3;
+   - one proposed next step, then stop and let the user steer.
+5. **Continue.** Brainstorm from there, holding the notes as the shared memory.
+   When a decision lands or the user asks to save, update the playground per step 5
+   (append to `log.md`, new events on top of `events.md`, fix the drift noted in
+   step 3). Don't rewrite the notes on every turn.
+
 ## Rules
 
 - **Verify before writing.** Every path, class, namespace, count and test result
@@ -87,5 +116,7 @@ Label: `View Tracker` (tracker, phased), `View Report` (report), `View Patterns`
 
 ## Report
 
-Reply with the folder path, the shape chosen, the files written or updated, the
+After `load`: the briefing from Load step 4 is the reply.
+
+Otherwise, reply with the folder path, the shape chosen, the files written or updated, the
 index row, and any fact you couldn't verify.
