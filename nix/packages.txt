@@ -106,5 +106,7 @@ nixpkgs#universal-ctags
 nixpkgs#devenv
 
 # uncategorized (new — sort me)
-github:herdrdev/herdr/v0.9.1#default
-nixpkgs#railway
+
+# uncategorized (new — sort me)
+github:herdrdev/herdr/v0.9.3#default
+github:numtide/nix-ai-tools#crush
