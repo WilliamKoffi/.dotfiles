@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics D26
-  - lmdl 008
 ---
 # TST-001 — Playwright runs the end-to-end tests
 

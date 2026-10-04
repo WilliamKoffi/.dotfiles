@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - lmdl conventions/api-contract.md:9
-  - vente 003
 ---
 # LNG-002 — Data keys are snake_case end to end
 

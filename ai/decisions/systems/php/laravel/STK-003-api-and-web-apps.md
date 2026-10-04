@@ -1,15 +1,12 @@
 ---
 id: STK-003
 title: "Two applications: Laravel api/, Nuxt web/"
-system: stack
-status: locked
+system: php/laravel
+status: retired
 date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics D32
-  - lmdl 001
 ---
 # STK-003 — Two applications: Laravel api/, Nuxt web/
 

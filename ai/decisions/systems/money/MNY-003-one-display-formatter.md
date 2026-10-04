@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: [MNY-001]
 supersedes: null
-proven_in:
-  - vente 005
-  - lmdl 005 ({amount, formatted})
 ---
 # MNY-003 — Amounts are displayed through one shared formatter
 

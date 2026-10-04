@@ -1,15 +1,12 @@
 ---
 id: AUTH-001
 title: "Sanctum SPA cookie, not API tokens"
-system: auth
-status: locked
+system: php/laravel
+status: superseded by LRV-008
 date: 2026-09-27
 conflicts: []
 requires: [STK-003]
 supersedes: null
-proven_in:
-  - ka-cosmetics D34
-  - lmdl 009
 ---
 # AUTH-001 — Sanctum SPA cookie, not API tokens
 

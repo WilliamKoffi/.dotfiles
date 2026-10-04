@@ -7,10 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics D5, D50
-  - lmdl 005
-  - intelli-resume ADR-024
 ---
 # MNY-001 — Money is an unsigned integer in the currency's smallest unit
 

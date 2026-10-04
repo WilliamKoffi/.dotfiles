@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics
-  - lmdl 003
 ---
 # DB-001 — ULID primary keys
 

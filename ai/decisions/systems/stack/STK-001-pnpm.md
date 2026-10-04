@@ -7,8 +7,6 @@ date: 2026-09-27
 conflicts: [STK-002]
 requires: []
 supersedes: null
-proven_in:
-  - lmdl AGENTS.md:57
 ---
 # STK-001 — pnpm is the package manager
 

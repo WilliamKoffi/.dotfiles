@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: [MNY-001]
 supersedes: null
-proven_in:
-  - ka-cosmetics D16
-  - lmdl 006
 ---
 # MNY-002 — The direction of money is an enum, never a sign
 

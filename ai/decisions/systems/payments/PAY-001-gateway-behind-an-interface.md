@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - intelli-resume ADR-024
-  - ka-cosmetics D52
 ---
 # PAY-001 — Payment gateways sit behind one interface
 

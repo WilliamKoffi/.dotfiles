@@ -7,8 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - vente 001
 ---
 # STK-004 — Code is organised as vertical feature slices
 
@@ -24,4 +22,4 @@ A change to one feature stays inside one folder, and an agent's scope can be one
 ## Consequences
 
 - A cross-feature import goes through `shared/`.
-- Only one project has lived with this; status stays `proposed` until a second does.
+- Status stays `proposed` until the user locks it.

@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: [AGT-002]
 supersedes: null
-proven_in:
-  - lmdl AGENTS.md §2
-  - intelli-resume ADR-025
 ---
 # AGT-003 — Work is tracked as files in tasks/, problems in findings/
 

@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics trash/playground/database_structuration §3
-  - lmdl conventions/principles.md §2
 ---
 # DB-002 — Nullable *_at timestamps over booleans
 

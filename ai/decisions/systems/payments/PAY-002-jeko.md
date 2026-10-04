@@ -7,10 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: [PAY-001]
 supersedes: null
-proven_in:
-  - ka-cosmetics D52, D53
-  - lmdl 036
-  - intelli-resume ADR-024
 ---
 # PAY-002 — Jeko Africa is the payment gateway
 
@@ -20,8 +16,7 @@ Jeko Africa collects online payments (mobile money) in XOF.
 
 ## Why
 
-Mobile money is how customers in Côte d'Ivoire pay; Jeko is integrated and proven in
-three projects.
+Mobile money is how customers in the XOF zone pay, and Jeko collects it through one API.
 
 ## Consequences
 

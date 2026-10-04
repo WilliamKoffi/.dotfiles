@@ -7,10 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: [AGT-001]
 supersedes: null
-proven_in:
-  - lmdl docs/decisions/README.md
-  - vente docs/decisions/README.md
-  - workstation skill SKILL.md rule 9
 ---
 # AGT-002 — A decision is never edited, only superseded
 

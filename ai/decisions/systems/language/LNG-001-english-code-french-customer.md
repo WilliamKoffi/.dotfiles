@@ -7,8 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - lmdl AGENTS.md §5
 ---
 # LNG-001 — English everywhere except text the customer reads, in French
 
@@ -19,7 +17,7 @@ reads (pages, e-mails, validation messages, admin labels the client uses) is in 
 
 ## Why
 
-Code and tooling are English-first; the customers of these projects read French.
+Code and tooling are English-first; the customers read French.
 
 ## Consequences
 

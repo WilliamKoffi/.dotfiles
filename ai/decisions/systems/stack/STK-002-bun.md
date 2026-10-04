@@ -7,9 +7,6 @@ date: 2026-09-27
 conflicts: [STK-001]
 requires: []
 supersedes: null
-proven_in:
-  - vente 004
-  - intelli-resume ADR-002
 ---
 # STK-002 — Bun is the package manager and script runner
 

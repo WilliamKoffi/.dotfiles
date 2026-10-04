@@ -7,10 +7,6 @@ date: 2026-09-27
 conflicts: []
 requires: []
 supersedes: null
-proven_in:
-  - ka-cosmetics D24
-  - lmdl 007
-  - intelli-resume ADR-020
 ---
 # AGT-001 — One owner per fact; AGENTS.md is a map
 
@@ -22,8 +18,7 @@ no rule of its own. `CLAUDE.md` and `GEMINI.md` are stubs that import `AGENTS.md
 
 ## Why
 
-Restated facts drift apart, and agents then act on the stale copy. intelli-resume had
-the same design-token section verbatim in three agent files before ADR-020.
+Restated facts drift apart, and agents then act on the stale copy.
 
 ## Consequences
 
