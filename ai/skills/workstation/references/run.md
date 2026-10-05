@@ -37,8 +37,11 @@ output. A `done_when` that needs a browser needs the browser — do not mark it 
 from reading the code.
 
 Failing after an honest attempt:
-- an outside blocker (a missing credential, another task's work, a decision the user
-  owes) → `blocked/`, `report.blocker` says exactly what is missing
+- an outside blocker → `blocked/`, `report.blocker` says exactly what is missing and
+  starts with what it waits on, so `status` can sort the board:
+  - `human:` — a step only a person can do (a credential, an install, a manual check)
+  - `decision:` — a question the user owes
+  - `TASK-NNN:` — another task's work, one prefix per task it waits on
 - the task cannot pass as written → `failed/`, `report.blocker` says what was tried
   and why it cannot
 
@@ -50,7 +53,8 @@ Fill every list in `report`:
 - `commands_run`: the command and what it printed, each marked pass or fail. Include
   the ones that failed on the way — the report is the record, not a press release.
 - `unresolved`: what is left, with the finding id or follow-up task it became.
-- `blocker`: only in `blocked/`.
+- `blocker`: only in `blocked/` and `failed/`; in `blocked/`, one line per cause, each with
+  its prefix (§3).
 
 ## 5. Close
 

@@ -53,8 +53,8 @@ Input · Output · Validation. The Validation block holds commands that actually
 in this repo — verify each one runs before writing it down.
 
 **tasks/TEMPLATE.yaml**: id, title, role, status, depends_on, knowledge, scope,
-forbidden, steps, done_when, source, and an empty `report` (files_changed,
-commands_run, unresolved, blocker). Drop a field only if this repo truly has no use
+forbidden, steps, done_when, source, an optional `slice`, and an empty `report`
+(files_changed, commands_run, unresolved, blocker). Drop a field only if this repo truly has no use
 for it; adding one is fine.
 
 ## 3. Seed it
