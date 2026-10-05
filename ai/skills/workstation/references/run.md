@@ -30,6 +30,11 @@ The smallest change that satisfies `done_when`. Only paths in `scope`; never a p
 Something wrong outside `scope` → a finding (`finding.md`), never a fix. Say in the
 report that you filed it.
 
+Steps that leave no design choice (moves, renames, boilerplate, edits the steps spell
+out) go to the `builder` subagent when it exists (`~/.claude/agents/builder.md`, a
+cheaper model): pass it the steps, the `scope` paths and one quick check. Keep every
+choice, and keep §3 to §5, in the main session.
+
 ## 3. Validate
 
 Run the role's Validation block **and** every `done_when` entry. Real commands, real
