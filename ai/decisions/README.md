@@ -44,6 +44,10 @@ Systems and frameworks (closed list; adding one is a decision in `agents/`):
 | php | `PHP` | PHP code shape that holds on any framework |
 | php/pest | `PST` | Pest test layout |
 | ts/nuxt | `NXT` | Nuxt rendering and plugins |
+| ts/solid | `SLD` | Solid state and code shape (AGT-006) |
+| ts/solid-query | `TSQ` | TanStack Query on Solid (AGT-006) |
+| ts/react | `RCT` | React state and code shape, on any React framework (AGT-006) |
+| ts/react-query | `RQY` | TanStack Query on React (AGT-006) |
 | rust | `RST` | Rust code shape that holds on any framework (AGT-005) |
 | rust/axum | `AXM` | axum HTTP layer (AGT-005) |
 | rust/sqlx | `SQX` | sqlx queries and database tests (AGT-005) |
@@ -95,6 +99,9 @@ supersedes: null
 | [AGT-003](systems/agents/AGT-003-work-as-files.md) | Work is tracked as files in tasks/, problems in findings/ | agents | locked |
 | [AGT-004](systems/agents/AGT-004-blocking-phase-gates.md) | Each phase ends with a blocking gate | agents | locked |
 | [AGT-005](systems/agents/AGT-005-rust-systems.md) | Rust gets a language folder and three framework folders | agents | locked |
+| [AGT-006](systems/agents/AGT-006-typescript-framework-systems.md) | TypeScript gains Solid and React folders, each with its query folder | agents | proposed |
+| [AGT-007](systems/agents/AGT-007-port-through-a-legacy-copy.md) | A port runs beside a frozen legacy copy, slice by slice, then switches at once | agents | locked |
+| [AGT-008](systems/agents/AGT-008-todo-is-the-intake-register.md) | `todo.md` is the intake register; a task ticks its line when it completes | agents | locked |
 | [LNG-001](systems/language/LNG-001-english-code-french-customer.md) | English everywhere except text the customer reads, in French | language | locked |
 | [LNG-002](systems/language/LNG-002-snake-case-data-keys.md) | Data keys are snake_case end to end | language | locked |
 | [LNG-003](systems/language/LNG-003-ship-existing-languages.md) | Ship only the languages the content exists in | language | locked |
@@ -105,6 +112,9 @@ supersedes: null
 | [STK-005](systems/stack/STK-005-separate-app-styling.md) | Storefront and admin styling never mix | stack | locked |
 | [STK-006](systems/stack/STK-006-independent-modules.md) | Modules never compose each other's pages | stack | locked |
 | [STK-007](systems/stack/STK-007-bin-by-slice.md) | Scripts live in `bin/<slice>/<word>.sh` | stack | locked |
+| [STK-008](systems/stack/STK-008-rust-cli-tools-first.md) | Shell work uses the Rust CLI alternatives first | stack | locked |
+| [STK-009](systems/stack/STK-009-protobuf-api-contract.md) | The API contract is `.proto`; the client picks JSON or binary by `Accept` | stack | locked |
+| [STK-010](systems/stack/STK-010-files-under-150-lines.md) | File size and splitting follow the grain convention | stack | locked |
 | [DB-001](systems/database/DB-001-ulid-primary-keys.md) | ULID primary keys | database | locked |
 | [DB-002](systems/database/DB-002-nullable-timestamps-over-booleans.md) | Nullable *_at timestamps over booleans | database | locked |
 | [DB-003](systems/database/DB-003-sqlite-dev-mariadb-prod.md) | SQLite in development and tests, MariaDB in production | database | locked |
@@ -146,8 +156,10 @@ supersedes: null
 | [OPS-003](systems/ops/OPS-003-backup-command.md) | The app ships a backup command; the operator owns the rest | ops | locked |
 | [OPS-004](systems/ops/OPS-004-configurable-logs.md) | Logs go to stderr or daily files, chosen by config | ops | locked |
 | [SEC-001](systems/security/SEC-001-standing-security-rules.md) | Standing security rules | security | locked |
+| [SEC-002](systems/security/SEC-002-permission-on-the-route.md) | A permission is declared on the route and checked before the handler runs | security | locked |
 | [SUP-001](systems/support/SUP-001-support-tickets.md) | Post-sale support is its own module | support | locked |
 | [TST-001](systems/testing/TST-001-playwright-end-to-end.md) | Playwright runs the end-to-end tests | testing | locked |
+| [TST-002](systems/testing/TST-002-browser-checks-through-the-mcp.md) | Browser checks run through the Playwright MCP, driven as a person | testing | locked |
 | [AUTH-001](systems/php/laravel/AUTH-001-sanctum-spa-cookie.md) | Sanctum SPA cookie, not API tokens | php/laravel | superseded by LRV-008 |
 | [LRV-001](systems/php/laravel/LRV-001-layer-scoped-slices.md) | Slicing is scoped to the layer | php/laravel | locked |
 | [LRV-002](systems/php/laravel/LRV-002-route-leaves.md) | Route leaves per module; middleware only in the index | php/laravel | locked |
@@ -163,20 +175,30 @@ supersedes: null
 | [PHP-003](systems/php/PHP-003-vendor-patches-with-tests.md) | A vendor patch ships with its tests | php | locked |
 | [PHP-004](systems/php/PHP-004-named-arguments.md) | Arguments are always passed by name | php | locked |
 | [PST-001](systems/php/pest/PST-001-pest-lowercase-layout.md) | Pest tests in tests/feature and tests/unit, named *.test.php | php/pest | locked |
+| [PST-002](systems/php/pest/PST-002-every-test-is-pest.md) | Every test is written in Pest; no PHPUnit test class is left | php/pest | locked |
 | [NXT-001](systems/ts/nuxt/NXT-001-ssr.md) | Nuxt renders on the server (SSR) | ts/nuxt | locked |
 | [NXT-002](systems/ts/nuxt/NXT-002-spa.md) | Nuxt renders in the browser only (SPA) | ts/nuxt | locked |
+| [SLD-001](systems/ts/solid/SLD-001-state-bind.md) | Solid state is read and written through `State.bind` | ts/solid | locked |
+| [SLD-002](systems/ts/solid/SLD-002-routes-as-data.md) | A slice declares its routes as data; the shell collects them | ts/solid | locked |
+| [TSQ-001](systems/ts/solid-query/TSQ-001-query-and-mutation-state.md) | A query and a mutation are read through the same `State` shape | ts/solid-query | proposed |
+| [RCT-001](systems/ts/react/RCT-001-state-bind.md) | React state is read and written through `State.bind` | ts/react | locked |
+| [RQY-001](systems/ts/react-query/RQY-001-query-and-mutation-state.md) | A query and a mutation are read through the same `State` shape | ts/react-query | proposed |
 | [RST-001](systems/rust/RST-001-crate-per-slice.md) | A workspace with one crate per feature slice | rust | locked |
 | [RST-002](systems/rust/RST-002-kebab-case-crates.md) | Crate packages and folders are kebab-case | rust | locked |
 | [RST-003](systems/rust/RST-003-no-mod-rs.md) | A module is `name.rs` beside `name/`, never `mod.rs` | rust | locked |
 | [RST-004](systems/rust/RST-004-pinned-toolchain.md) | The toolchain is pinned in `rust-toolchain.toml` | rust | locked |
 | [RST-005](systems/rust/RST-005-strict-lints.md) | Strict workspace lints, warnings fail | rust | locked |
-| [RST-006](systems/rust/RST-006-naming.md) | Names are one English word, verbs for actions | rust | locked |
+| [RST-006](systems/rust/RST-006-naming.md) | Names are one English word; a domain noun is a folder | rust | locked |
 | [RST-007](systems/rust/RST-007-validated-newtypes.md) | Domain values are validated newtypes | rust | locked |
 | [RST-008](systems/rust/RST-008-no-global-state.md) | No global state, minimal `pub`, traits only when shared | rust | locked |
 | [RST-009](systems/rust/RST-009-locked-dependencies.md) | `Cargo.lock` is committed and `cargo deny` runs | rust | locked |
 | [RST-010](systems/rust/RST-010-generated-code-crate.md) | Generated code lives in its own crate | rust | locked |
 | [RST-011](systems/rust/RST-011-test-tooling.md) | Tests run with nextest, properties with proptest | rust | locked |
 | [RST-012](systems/rust/RST-012-build-settings.md) | Builds stay fast through the slice loop and two profile settings | rust | locked |
+| [RST-013](systems/rust/RST-013-tests-mirror-src.md) | Tests live in `tests/`, mirroring `src/`, as children of the module they test | rust | locked |
+| [RST-014](systems/rust/RST-014-files-split-by-role.md) | A file stays under 150 lines and splits by role | rust | superseded by STK-010 |
+| [RST-015](systems/rust/RST-015-behaviour-on-the-noun.md) | Behaviour belongs to the noun it acts on | rust | locked |
+| [RST-016](systems/rust/RST-016-functions-live-on-a-type.md) | Every function lives on a type; a namespace is a zero-sized struct | rust | locked |
 | [AXM-001](systems/rust/axum/AXM-001-axum-http.md) | axum serves HTTP, with thin routes | rust/axum | locked |
 | [SQX-001](systems/rust/sqlx/SQX-001-checked-sql.md) | SQL is written raw and checked at compile time | rust/sqlx | locked |
 | [SQX-002](systems/rust/sqlx/SQX-002-sqlx-test.md) | Database tests use `#[sqlx::test]` | rust/sqlx | locked |
