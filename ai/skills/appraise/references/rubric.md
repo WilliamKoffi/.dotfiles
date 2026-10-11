@@ -1,109 +1,69 @@
-# Luxury audit rubric
+# Core rubric — every web project
 
-Evaluate the website on each of the following criteria. Rate each numbered section `/10`.
+Rate each section `/10`, or write `N/A — <reason>`. The profile file adds sections after these.
 
-## 1. First Impression
-- Does the homepage immediately communicate professionalism?
-- Does it inspire trust?
-- Does it look expensive or cheap?
-- Does it feel like a real law firm?
-- Is the visual hierarchy clear?
-- Is there unnecessary visual noise?
+## 1. First impression
+- Does the first screen say what this is and who it is for?
+- Does it look finished and trustworthy, or like a prototype?
+- Is the visual hierarchy clear? Is there noise, placeholder or demo content?
 
-## 2. Brand Identity
-Evaluate: logo quality, color palette, typography, consistency, icons, illustrations,
-photography, use of whitespace, premium feeling, luxury perception.
+## 2. Critical journeys
+For each journey named in step 1 of SKILL.md:
+- Can a real user complete it end to end, at 1440 and 375 px?
+- What happens on error: offline, refused request, invalid input, double click, slow network?
+- Is the result persisted and visible afterwards (reload, another device, another user)?
 
-Would a potential client trust this firm based solely on its branding?
+## 3. Navigation & information architecture
+Menu clarity, current-page indication, mobile navigation, breadcrumbs, search, back button,
+deep links, empty states, 404 page.
 
-## 3. Professionalism
-Imagine a CEO, judge, or corporate executive visits this website.
+## 4. Visual design
+Spacing, alignment, consistency, cards, buttons, hover and focus states, loading skeletons,
+transitions, image quality, dark mode if offered.
 
-Evaluate: credibility, seriousness, authority, confidence, tone of voice, professional
-language, overall polish.
+## 5. Typography & color
+Font choice and loading, sizes, line height, line length, hierarchy; palette consistency,
+accent and CTA colors, contrast.
 
-List every detail that makes the website appear amateur.
+## 6. Content & language
+Grammar, tone, clarity, untranslated strings, mixed languages, jargon, raw values shown to
+users (ISO dates, ids, English error keys), number and currency formatting.
 
-## 4. Homepage
-Review: hero section, headline, subheadline, CTA, trust indicators, statistics,
-testimonials, practice areas preview, attorney introduction, contact information, footer.
+## 7. Accessibility (WCAG 2.2 AA)
+Contrast, keyboard navigation, focus visible and not obscured, ARIA, semantic HTML, alt
+text, form labels, error messages, touch targets (24×24 minimum), reduced motion,
+screen-reader names of icons and controls.
 
-Is anything missing?
+## 8. Mobile experience
+Layout at 375 px, no horizontal scroll, touch targets, forms and keyboards, sticky elements,
+performance on a mid-range phone.
 
-## 5. Navigation
-Review: navigation clarity, menu organization, sticky navigation, mobile navigation,
-breadcrumbs, current page indication, search functionality, footer navigation.
+## 9. Performance
+LCP, CLS, INP risks; bundle size, unused JS and CSS, images, lazy loading, fonts, caching
+headers, compression, API latency of the critical journeys.
 
-## 6. Practice Area Pages
-Evaluate whether every service page includes: problem, solution, benefits, process, FAQ,
-attorney expertise, case examples, CTA, contact options, internal links, trust indicators.
+## 10. Security
+HTTPS, authentication and sessions, password storage, brute-force and rate limits,
+authorization on every route (not only in the UI), tenant or user isolation, server-side
+validation, file uploads, secrets in the repo or bundle, security headers, CORS, dependency audit.
 
-## 7. Attorney Profile
-Does it include: professional portrait, biography, education, bar admissions, experience,
-awards, certifications, languages, publications, media appearances, professional
-memberships, LinkedIn, contact CTA.
+## 11. Data, money & integrity
+Where the project stores data people rely on: transactions, idempotency of retried writes,
+totals that reconcile, audit trail, what a delete or cancel does to linked records, backups
+and a tested restore.
 
-## 8. Trust & Credibility
-Evaluate presence of: client testimonials, case results, awards, certifications,
-associations, press mentions, legal publications, years of experience, success metrics,
-professional affiliations, Google Reviews, office photos, attorney photos.
+## 12. Operations & deployment
+Reproducible build, environment variables documented, migrations and seed data applied on
+deploy, health check, logs and error tracking, persistent storage for uploads, rollback
+path, monitoring.
 
-## 9. Conversion Optimization
-Evaluate: CTA placement, CTA wording, lead capture, contact forms, phone visibility,
-WhatsApp (if appropriate), appointment booking, urgency, trust near CTA, form friction,
-number of clicks to contact.
+## 13. Privacy & compliance
+Privacy policy, terms, legal notice, cookie consent and trackers, data retention, data
+export and deletion, the laws of the market served (GDPR, CCPA, local data-protection law).
 
-## 10. Visual Design
-Review: spacing, alignment, consistency, shadows, border radius, cards, buttons, hover
-effects, animations, micro-interactions, responsiveness, image quality, loading skeletons,
-premium appearance.
+## 14. Code quality
+Structure, naming, folder organization, tests and what they cover, type safety, dead code,
+duplicated logic, lint and build green, known findings or TODOs left open.
 
-## 11. Typography
-Evaluate: font choice, font sizes, line height, paragraph width, hierarchy, readability,
-contrast, professional appearance.
-
-## 12. Colors
-Evaluate: professionalism, contrast, accessibility, consistency, premium appearance, use of
-accent colors, CTA colors, hover colors, dark mode readiness.
-
-## 13. Accessibility
-Audit according to WCAG 2.2.
-
-Review: contrast, keyboard navigation, ARIA, focus states, alt text, semantic HTML, screen
-readers, form labels, error messages, touch targets, reduced motion.
-
-## 14. Mobile Experience
-Review: responsive layout, touch targets, navigation, forms, buttons, spacing, typography,
-performance.
-
-## 15. Performance
-Evaluate: Largest Contentful Paint, CLS risks, unused JavaScript, unused CSS, images, lazy
-loading, fonts, bundle size, caching, loading strategy.
-
-## 16. SEO
-Review: title tags, meta descriptions, heading hierarchy, structured data, Open Graph,
-canonical URLs, internal linking, image alt text, sitemap, robots.txt, legal schema, local
-SEO.
-
-## 17. Content Quality
-Evaluate: grammar, professional tone, clarity, persuasiveness, authority, legal accuracy,
-readability, call-to-action copy, redundancy, weak wording.
-
-## 18. Code Quality
-Review: component structure, naming, folder organization, maintainability, scalability,
-reusable components, performance, dead code, accessibility, best practices.
-
-## 19. Security & Compliance
-Review: HTTPS, Privacy Policy, cookie consent, Terms of Service, legal notices, form
-validation, spam protection, data privacy.
-
-## 20. Missing Features
-Identify features expected from a modern law firm website, such as: online appointment
-scheduling, attorney profiles, case evaluation form, live chat, FAQ, knowledge center,
-legal blog, resource downloads, office locations, maps, languages, accessibility options.
-
-## 21. Competitive Analysis
-Compare this website against the top law firm websites.
-
-Would this website appear among premium law firms? What makes it weaker? What makes it
-stronger?
+## 15. Missing features
+What a user of this kind of product expects on day one and does not find.
