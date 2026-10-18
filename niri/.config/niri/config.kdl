@@ -75,6 +75,8 @@ spawn-at-startup "ironbar"
 spawn-sh-at-startup "swaybg -o eDP-1 -i ~/Pictures/Wallpaper/Elder-scrolls.jpg -m fill"
 spawn-at-startup "mako"
 spawn-at-startup "copyq"
+spawn-sh-at-startup "wl-paste --type text --watch ~/.config/niri/niri-copy-text.sh"
+spawn-sh-at-startup "wl-paste --type image --watch ~/.config/niri/niri-copy-image.sh"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "swayidle" "-w" \
     "timeout" "300" "loginctl lock-session" \
