@@ -70,7 +70,6 @@ nixpkgs#neovim
 nixpkgs#helix
 nixpkgs#zed-editor
 nixpkgs#antigravity-ide
-nixpkgs#opencode
 
 # browsers
 nixpkgs#brave
@@ -108,5 +107,11 @@ nixpkgs#devenv
 # uncategorized (new — sort me)
 
 # uncategorized (new — sort me)
-github:herdrdev/herdr/v0.9.3#default
 github:numtide/nix-ai-tools#crush
+
+# uncategorized (new — sort me)
+github:herdrdev/herdr/v0.9.5#default
+nixpkgs#buf
+nixpkgs#lazygit
+nixpkgs#scooter
+nixpkgs#yazi
