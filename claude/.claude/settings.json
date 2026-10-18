@@ -10,14 +10,23 @@
       "Bash(node dist/cli.js:*)"
     ]
   },
-  "model": "opus",
+  "model": "sonnet",
   "footerLinksRegexes": [],
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "php-lsp@claude-plugins-official": true,
     "vercel@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "ponytail@ponytail": true
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
   },
   "effortLevel": "high",
   "modelSettings": {
@@ -25,11 +34,12 @@
       "effortLevel": "high"
     },
     "claude-opus-5-5": {
-      "autoCompactWindow": 700000
+      "autoCompactWindow": 900000
     }
   },
   "tui": "fullscreen",
-  "theme": "dark-daltonized",
+  "theme": "auto",
+  "switchModelsOnFlag": true,
   "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": [
