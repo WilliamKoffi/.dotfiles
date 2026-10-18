@@ -5,7 +5,7 @@
 #              sourced by the main xchroot script and is not executable on its own.
 
 # Source the logger utility
-source "$(dirname "$0")/log-message.sh"
+source "$(dirname "$0")/library:log.sh"
 
 # --- Configuration ---
 DEFAULT_CHROOT_DIR="/mnt/linux_chroot"

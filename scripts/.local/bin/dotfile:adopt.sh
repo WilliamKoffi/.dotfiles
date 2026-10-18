@@ -1,12 +1,12 @@
 #!/bin/bash
-# dotfile.sh
+# dotfile:adopt.sh
 # Description: Moves a target file or directory into a dotfiles directory. 
 # By default it preserves the relative path inside $HOME. With -i, only the 
 # basename is kept. Then it creates a symlink back to the original location.
-# Usage: ./dotfile.sh [-n] [-i] -t <target> -d <dotfiles_dir>
+# Usage: ./dotfile:adopt.sh [-n] [-i] -t <target> -d <dotfiles_dir>
 
 # --- Setup ---
-source "$(dirname "$0")/log-message.sh"
+source "$(dirname "$0")/library:log.sh"
 
 # --- Default Flags ---
 DRY_RUN=false

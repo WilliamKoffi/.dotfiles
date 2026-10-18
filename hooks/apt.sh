@@ -12,7 +12,7 @@ sudo -u llyam bash -c '
   export PATH="$HOME/.local/bin:$ASDF_DIR/bin:$ASDF_DIR/shims:$HOME/.deno/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$PATH"
 
   # Source logger directly by path
-  LOG_SCRIPT="$HOME/.dotfiles/scripts/.local/bin/log-message.sh"
+  LOG_SCRIPT="$HOME/.dotfiles/scripts/.local/bin/library:log.sh"
   if [[ -f "$LOG_SCRIPT" ]]; then
     . "$LOG_SCRIPT"
   else

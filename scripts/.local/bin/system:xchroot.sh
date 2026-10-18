@@ -9,7 +9,7 @@
 SCRIPT_DIR="$(dirname "$0")"
 
 # Source the necessary libraries for core logic and logging.
-source "${SCRIPT_DIR}/log-message.sh"
+source "${SCRIPT_DIR}/library:log.sh"
 source "${SCRIPT_DIR}/xchroot/lib.sh"
 
 # --- Functions ---

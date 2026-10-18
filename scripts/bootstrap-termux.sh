@@ -19,7 +19,7 @@ cd "$HOME/.dotfiles"
 # management) is skipped entirely for the same reason.
 stow bash bat claude gemini git nvim qwen vim zsh
 
-# scripts/: xchroot.sh (needs root chroot) and disable-services.sh (needs
+# scripts/: system:xchroot.sh (needs root chroot) and system:mute.sh (needs
 # systemd) don't apply on Termux, but are harmless dead weight if stowed —
 # they'd just fail with "command not found" if run, not misbehave silently.
 stow scripts

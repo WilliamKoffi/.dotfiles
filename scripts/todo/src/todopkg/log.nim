@@ -1,4 +1,4 @@
-## Console messages in the same shape as scripts/.local/bin/log-message.sh
+## Console messages in the same shape as scripts/.local/bin/library:log.sh
 ## so the Nim binary is visually indistinguishable from the rest of the
 ## dotfiles tooling.
 ##

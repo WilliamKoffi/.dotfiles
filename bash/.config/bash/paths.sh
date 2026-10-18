@@ -3,7 +3,7 @@
 [[ ":$PATH:" != *":$HOME/.local/share/nvim/mason/bin:"* ]] && export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
 
 export DOTFILES_PATH="$HOME/.dotfiles"
-export LOG_MESSAGE_PATH="$DOTFILES_PATH/scripts/.local/bin/log-message.sh"
+export LOG_MESSAGE_PATH="$DOTFILES_PATH/scripts/.local/bin/library:log.sh"
 
 # Android SDK
 export ANDROID_HOME="$HOME/.android"

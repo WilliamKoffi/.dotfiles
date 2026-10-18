@@ -4,14 +4,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 : "${LOG_MESSAGE_PATH:=}"
 
-if [[ -f "$SCRIPT_DIR/log-message.sh" ]]; then
-    source "$SCRIPT_DIR/log-message.sh"
+if [[ -f "$SCRIPT_DIR/library:log.sh" ]]; then
+    source "$SCRIPT_DIR/library:log.sh"
 elif [[ -n "$LOG_MESSAGE_PATH" && -f "$LOG_MESSAGE_PATH" ]]; then
     source "$LOG_MESSAGE_PATH"
-elif [[ -f "$HOME/.dotfiles/scripts/.local/bin/log-message.sh" ]]; then
-    source "$HOME/.dotfiles/scripts/.local/bin/log-message.sh"
-elif [[ -f "$HOME/.local/bin/log-message.sh" ]]; then
-    source "$HOME/.local/bin/log-message.sh"
+elif [[ -f "$HOME/.dotfiles/scripts/.local/bin/library:log.sh" ]]; then
+    source "$HOME/.dotfiles/scripts/.local/bin/library:log.sh"
+elif [[ -f "$HOME/.local/bin/library:log.sh" ]]; then
+    source "$HOME/.local/bin/library:log.sh"
 else
     # Fallback message printer with ANSI colors
     print_message() {
