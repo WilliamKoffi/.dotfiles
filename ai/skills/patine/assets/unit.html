@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNIT — variantes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="theme.js"></script>
+  <!--
+    Contract of this unit (keep it true in every variant):
+    - shows: …
+    - data: …
+    - links / actions: …
+    - hooks other code relies on: …
+  -->
+</head>
+<body class="min-h-screen">
+
+  <!-- Playground switcher (not part of the design) -->
+  <div class="sticky top-0 z-[90] bg-[#0F0E0D] text-[#d6d3d1] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs" style="font-family: system-ui, sans-serif">
+    <div class="flex items-center gap-3">
+      <span class="text-[14px] text-[#fff]">NN • UNIT</span>
+      <span data-pitch class="text-[#a8a29e]"></span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span data-themes class="flex gap-1"></span>
+      <span data-states class="flex gap-1"></span>
+      <span data-variants class="flex gap-1"></span>
+    </div>
+  </div>
+
+  <div data-root></div>
+
+  <script>
+    // Variants: key → name and one-line pitch shown in the switcher.
+    const VARIANTS = {
+      a: { name: 'A « … »', pitch: '…' },
+      b: { name: 'B « … »', pitch: '…' },
+      c: { name: 'C « … »', pitch: '…' },
+    }
+    // States toggled by URL flags: &empty, &loading, &error, &guest …
+    const STATES = ['empty', 'loading', 'error']
+
+    const params = new URLSearchParams(location.search)
+    const V = params.get('v') in VARIANTS ? params.get('v') : 'a'
+    const S = Object.fromEntries(STATES.map((s) => [s, params.has(s)]))
+
+    const url = (patch) => {
+      const p = new URLSearchParams(location.search)
+      for (const [k, v] of Object.entries(patch)) v === null ? p.delete(k) : p.set(k, v)
+      return `?${p.toString().replace(/=(&|$)/g, '$1')}`
+    }
+    const pill = (label, href, on) =>
+      `<a href="${href}" class="px-3 py-1 rounded-full border ${on ? 'bg-[#fff] text-[#0F0E0D] border-[#fff]' : 'border-white/15 hover:bg-white/10'}">${label}</a>`
+
+    document.querySelector('[data-pitch]').textContent = VARIANTS[V].pitch
+    document.querySelector('[data-variants]').innerHTML =
+      Object.entries(VARIANTS).map(([k, x]) => pill(x.name, url({ v: k }), k === V)).join('')
+    document.querySelector('[data-states]').innerHTML =
+      STATES.map((s) => pill(s, url({ [s]: S[s] ? null : '' }), S[s])).join('')
+    if (Object.keys(THEMES).length > 1) {
+      document.querySelector('[data-themes]').innerHTML =
+        Object.entries(THEMES).map(([k, t]) => pill(t.name, url({ theme: k }), k === THEME_KEY)).join('')
+    }
+
+    // ---------- data: live through the server proxy (/api/...), or a JSON fixture ----------
+    let data = null
+    async function load() {
+      if (S.loading) return
+      // data = await fetch('/api/products?perPage=12').then((r) => r.json())
+      // data = await fetch('UNIT.json').then((r) => r.json())
+    }
+
+    // ---------- variants: each draws the whole unit into [data-root] ----------
+    const render = {
+      a() { return `<section class="p-8 font-display text-3xl">A</section>` },
+      b() { return `<section class="p-8 font-display text-3xl">B</section>` },
+      c() { return `<section class="p-8 font-display text-3xl">C</section>` },
+    }
+
+    const root = document.querySelector('[data-root]')
+    load()
+      .then(() => { root.innerHTML = render[V]() })
+      .catch((e) => { root.innerHTML = `<pre class="p-8 text-sm">${e}</pre>` })
+  </script>
+</body>
+</html>
